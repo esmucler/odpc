@@ -1,0 +1,253 @@
+is.odpc <- function(object, ...) {
+  # This function checks whether an object is of class odpc
+  # First check if object is a list.
+  # Second check if the list has the correct entries
+  # Third check if the entries have the correct classes
+  # Fourth check if the entries have the correct dims
+  if (any(!inherits(object, "list"), !inherits(object, "odpc"))) {
+    return(FALSE)
+  } else if (any(is.null(object$f), is.null(object$B), is.null(object$alpha),
+                 is.null(object$a), is.null(object$mse),
+                 is.null(object$k1), is.null(object$k2), is.null(object$call),
+                 is.null(object$conv))) {
+    return(FALSE)
+  } else if (any(!inherits(object$mse, "numeric"), !inherits(object$a, "numeric"),
+                 !inherits(object$B, "matrix"), !inherits(object$call, "call"), !inherits(object$conv, "logical"),
+                 all(!inherits(object$f,"numeric"), !inherits(object$f, "ts"), !inherits(object$f, "xts")),
+                 all(!inherits(object$k1, "numeric"), !inherits(object$k1, "integer")),
+                 all(!inherits(object$k2, "numeric"), !inherits(object$k2, "integer")),
+                 !inherits(object$alpha, "numeric"))) {
+    return(FALSE)
+  } else if (any(length(object$a) != (object$k1 + 1) * dim(object$B)[2],
+                 dim(object$B)[1] != object$k2 + 1, length(object$alpha) != dim(object$B)[2])
+             ) {
+    return(FALSE)
+  } else {
+    return(TRUE)
+  }
+}
+
+construct.odpc <- function(out, data) {
+  #This function constructs an object of class odpc.
+  #INPUT
+  # out: the output of odpc_priv
+  # data: the data matrix passed to odpc_priv
+  #OUTPUT
+  # An object of class odpc, that is, a list with entries:
+  # a: vector to construct the principal component
+  # alpha: vector of intercepts corresponding to the principal component
+  # B: matrix of loadings corresponding to the principal component
+  # k: number of lags used
+  # f: principal component
+  # mse:  mean (in T and m) squared error 
+  # conv: logical. Did the iterations converge?
+  # expart: proportion of the variance explained
+  # call: the matched call
+  # conv: logical. Did the iterations converge?
+  
+  out$f <- as.vector(out$f)
+  out$B <- as.matrix(out$B)
+  colnames(out$B) <- colnames(data)
+  out$a <- as.vector(out$a)
+  out$alpha <- as.vector(out$alpha)
+  out$res <- NULL
+  out$criter <- NULL
+  class(out) <- append(class(out), "odpc")
+  return(out)
+}
+
+fitted.odpc <- function(object, ...) {
+  # Returns the fitted values of a odpc object
+  if (!is.odpc(object)){
+    stop("object should be of class odpc")
+  }
+  matF <- getMatrixFitted(object$f, object$k1, object$k2)
+  fitted <- matF %*% rbind(as.vector(object$alpha), as.matrix(object$B))
+  colnames(fitted) <- colnames(object$B)
+  return(fitted)
+}
+
+plot.odpc <- function(x, which = "Component", which_load = 0, ...) {
+  #Plots a odpc object
+  #INPUT
+  # x: An object of class odpc, the result of odpc or one of the entries 
+  # of the result of auto.odpc
+  # which: String. Indicates what to plot, either 'Component' or 'Loadings'
+  # Default is 'Component'
+  # which_load: Lag number indicating which loadings should be plotted. 
+  # Only used if which = 'Loadings'. Default is 0.
+  if (!is.odpc(x)) {
+    stop("x should be of class odpc")
+  }
+  if (!which %in% c("Component", "Loadings")) {
+    stop("which should be either Component or Loadings ")
+  }
+  if (!inherits(which_load, "numeric")) {
+    stop("which_load should be numeric")
+  } else if (any(!(which_load == floor(which_load)), which_load < 0, which_load > nrow(x$B) - 1)) {
+    stop("which_load should be a non-negative integer, at most equal to the number of lags")
+  }
+  if (which == "Component"){
+    plot(x$f, type = "l", main = "Principal Component", ...) 
+  } else if (which == "Loadings"){
+    plot(x$B[which_load + 1, ], type = "l", main = c(paste(which_load, "lag loadings")), ...)
+  }
+}
+
+
+print.odpc <- function(x, ...) {
+  #Print method for the odpc class
+  if (!is.odpc(x)) {
+    stop("x should be of class odpc")
+  }
+  y <- list(x)
+  class(y) <- c('list', 'odpcs')
+  print(y)
+}
+
+is.odpcs <- function(object, ...) {
+  #This function checks whether an object is of class odpcs,
+  #that is, if each of its entries is a list of class odpc
+  if (any(!inherits(object, "odpcs"), !inherits(object, "list"))) {
+    return(FALSE)
+  } else {
+    return(all(sapply(object, is.odpc)))
+  }
+}
+
+construct.odpcs <- function(out, data, fn_call) {
+  #This function constructs an object of class odpcs that is, a list of length equal to 
+  #the number of computed components. The i-th entry of this list is an object of class odpc.
+  #INPUT
+  # out: the output of auto.odpc
+  # data: the data matrix passed to auto.odpc
+  # fn_call: the original call to auto.odpc
+  #OUTPUT
+  # An object of class odpcs, that is, a list where each entry is an object of class odpc.
+  
+  out <- lapply(out, function(x, fn_call){ x$call <- fn_call; return(x)}, fn_call)
+  out <- lapply(out, construct.odpc, data)
+  class(out) <- append(class(out), "odpcs")
+  return(out)
+}
+
+
+
+
+
+#FIXME 
+# plot.odpcs <- function(x, which_comp = 1, ...) {
+#   #Plots a odpcs object
+#   #INPUT
+#   # x: An object of class odpcs, the result of auto.gdpc
+#   # which_comp: Integer vector. Indicates which components to plot
+#   if (!is.odpcs(x)) {
+#     stop("x should be of class gdpcs")
+#   }
+#   class(x) <- c('list', 'gdpcs', 'odpcs') #Change to gdpcs to use that method
+#   plot(x, which_comp = which_comp, ...)
+# }
+
+components <- function(object, ...){
+  # Generic function for getting components out of an object
+  UseMethod("components", object)
+}
+
+
+components.odpcs <- function(object, which_comp = 1) {
+  # This function extracts the desired components from an odpcs object
+  #INPUT
+  # object: the output of odpc
+  # which_comp: Integer vector. Indicates which components to get
+  #OUTPUT
+  # A list with the desired components as entries
+  
+  if (!is.odpcs(object)) {
+    stop("object should be of class odpcs")
+  }
+  if (all(!inherits(which_comp, "numeric"), !inherits(which_comp, "integer"))) {
+    stop("which_comp should be numeric")
+  } else if (any(!(which_comp == floor(which_comp)), which_comp <= 0, which_comp > length(object))) {
+    stop("The entries of which_comp should be positive integers, at most equal to the number of components")
+  }
+  object <- object[which_comp]
+  comps <- lapply(object, function(object){ object$f })
+  names(comps) <- paste("Component number", which_comp)
+  return(comps)
+}
+
+fitted.odpcs <- function(object, num_comp = 1, ...) {
+  # Returns the fitted values of a odpcs object using components 1,...,num_comp
+  if (!is.odpcs(object)) {
+    stop("object should be of class odpcs")
+  }
+  if (all(!inherits(num_comp, "numeric"), !inherits(num_comp, "integer"))) {
+    stop("num_comp should be numeric")
+  } else if (any(!(num_comp == floor(num_comp)), num_comp <= 0, num_comp > length(object))) {
+    stop("num_comp should be a positive integer, at most equal to the number of components")
+  }
+  object <- object[1:num_comp]
+  Nmin <- length(object[[num_comp]]$f) - object[[num_comp]]$k2
+  fits <- 0
+  aux <- 0
+  for (i in 1:length(object)){
+    aux <- fitted(object[[i]])
+    N <- nrow(aux)
+    fits <- fits + aux[(1 + N - Nmin):N,]
+  }
+  colnames(fits) <- colnames(object[[1]]$B)
+  return(fits)
+}
+
+
+forecast.odpcs <- function(object, h, Z = NULL, add_residuals = FALSE, ...){
+  # This function computes h-steps ahead forecast from a odpcs object
+  # INPUT
+  # object: an object of class odpcs
+  # h: steps ahead to forecast
+  # Z: original data.
+  # add_residuals: logical? should the forecasts of the residuals be added?
+  # ...: further arguments to be passed to auto.arima
+  ncomp <- length(object)
+  comps <- components.odpcs(object, 1:ncomp)
+  fore <- 0
+  
+  fores_comps <- lapply(comps, function(x, h, ...) { auto <- auto.arima(x, ...)
+                                                     return(forecast(auto, h)$mean)
+                                                     }, h, ...)
+  for (i in 1:ncomp){
+    comps[[i]] <- c(comps[[i]], fores_comps[[i]])
+    matF <- getMatrixFore(comps[[i]], object[[i]]$k2, h)
+    fore <- fore + matF %*% rbind(as.vector(object[[i]]$alpha), as.matrix(object[[i]]$B))
+  }
+    
+  
+  if (add_residuals){
+    k1s <- sapply(object, function(x) { return(x$k1) })
+    k2s <- sapply(object, function(x) { return(x$k2) })
+    k_tot <- sum(k1s + k2s)
+    residuals <- Z[(k_tot + 1):nrow(Z), ] - fitted(object, num_comp = length(object))
+    fore_res <- apply(residuals, 2, function(x, h, ...){ 
+      auto <- auto.arima(x, ...)
+      return(forecast(auto, h)$mean)
+    }, h, ...)
+    fore <- fore + fore_res
+  }
+  return(fore)
+}
+
+print.odpcs <- function(x, ...) {
+  #   Print method for the odpcs class
+  if (!is.odpcs(x)) {
+    stop("x should be of class odpcs")
+  }
+  k1s <- sapply(x, function(x){ round(x$k1, 3) })
+  k2s <- sapply(x, function(x){ round(x$k2, 3) })
+  mses <- sapply(x, function(x){ round(x$mse, 3) })
+  mat <- cbind(k1s, k2s, mses)
+  nums <- paste(1:length(x))
+  nums <- sapply(nums, function(x){ paste("Component", x)})
+  colnames(mat) <- c("k1", "k2", "MSE")
+  tab <- data.frame(mat, row.names = nums)
+  print(tab)
+}

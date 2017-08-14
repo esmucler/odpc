@@ -1,0 +1,9 @@
+*.Rhistory
+.Rproj.user
+.Rbuildignore
+README.Rmd
+gdpc.Rproj
+*.so
+*.o
+.RData
+odpc.Rproj

@@ -1,0 +1,18 @@
+Package: odpc
+Type: Package
+Title: One-Sided Dynamic Principal Components
+Version: 1.0.0
+Date: 2017-07-25
+Author: Daniel Peña <daniel.pena@uc3m.es>,
+    Ezequiel Smucler <ezequiels.90@gmail.com>,
+    Victor Yohai <vyohai@dm.uba.ar>
+Maintainer: Ezequiel Smucler <ezequiels.90@gmail.com>
+Description: Functions to compute One-Sided Dynamic
+ Principal Components.
+License: GPL (>= 2)
+Imports: methods, Rcpp (>= 0.12.7), gdpc, forecast
+LinkingTo: Rcpp, RcppArmadillo (>= 0.7.500.0.0)
+Depends:
+    R (>= 3.3.1)
+NeedsCompilation: yes
+Encoding: UTF-8

@@ -1,0 +1,19 @@
+language: r
+cache: packages
+
+matrix:
+  include:
+    - os: linux
+      r: release
+      sudo : false
+    - os: linux
+      r: devel
+      sudo : false
+    - os: osx
+      latex: false
+      r: devel
+    - os: osx
+      latex: false
+      r: release
+  allow_failures:
+    - os: osx

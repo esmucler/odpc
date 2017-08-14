@@ -1,5 +1,4 @@
 useDynLib(odpc, .registration=TRUE)
-##exportPattern("^[[:alpha:]]+")
 importFrom("Rcpp", "evalCpp")
 importFrom("stats", "var", "fitted")
 importFrom("graphics","plot")

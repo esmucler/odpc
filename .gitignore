@@ -1,6 +1,5 @@
 *.Rhistory
 .Rproj.user
-.Rbuildignore
 README.Rmd
 gdpc.Rproj
 *.so

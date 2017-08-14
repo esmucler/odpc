@@ -131,23 +131,6 @@ construct.odpcs <- function(out, data, fn_call) {
   return(out)
 }
 
-
-
-
-
-#FIXME 
-# plot.odpcs <- function(x, which_comp = 1, ...) {
-#   #Plots a odpcs object
-#   #INPUT
-#   # x: An object of class odpcs, the result of auto.gdpc
-#   # which_comp: Integer vector. Indicates which components to plot
-#   if (!is.odpcs(x)) {
-#     stop("x should be of class gdpcs")
-#   }
-#   class(x) <- c('list', 'gdpcs', 'odpcs') #Change to gdpcs to use that method
-#   plot(x, which_comp = which_comp, ...)
-# }
-
 components <- function(object, ...){
   # Generic function for getting components out of an object
   UseMethod("components", object)

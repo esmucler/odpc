@@ -11,7 +11,7 @@ Computes One-Sided Dynamic Principal Components.
 \tabular{ll}{
 Package: \tab odpc\cr
 Type: \tab Package\cr
-Version: \tab 1.0.0.9000\cr
+Version: \tab 1.0.0\cr
 Date: \tab 2017-03-09\cr
 Depends: \tab R (>= 3.3.1)\cr
 License: \tab GPL (>= 2)\cr

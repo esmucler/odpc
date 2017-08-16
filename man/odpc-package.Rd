@@ -12,7 +12,7 @@ Computes One-Sided Dynamic Principal Components.
 Package: \tab odpc\cr
 Type: \tab Package\cr
 Version: \tab 1.0.0\cr
-Date: \tab 2017-03-09\cr
+Date: \tab 2017-08-15\cr
 Depends: \tab R (>= 3.3.1)\cr
 License: \tab GPL (>= 2)\cr
 Imports: \tab methods, Rcpp (>= 0.12.7), gdpc, forecast\cr

@@ -26,8 +26,8 @@ library(odpc)
 T <- 201 #length of series
 m <- 10 #number of series
 set.seed(1234)
-f <- matrix(0, 2 * T, 1)
-v <- rnorm(2 * T)
+f <- matrix(0, 2 * T + 1, 1)
+v <- rnorm(2 * T + 1)
 f[1] <- rnorm(1)
 theta <- 0.7
 # f satisfies and AR(1) model
@@ -44,7 +44,7 @@ for (i in 1:m) {
 fit <- odpc(x[1:(T - 1), ], ks = c(1))
 # Get a one step ahed forecast of x
 forecasts <- forecast.odpcs(fit, h = 1)
-mse <- sum((x[T, ] - forecasts)**2)/(m)
+mse <- mean((x[T, ] - forecasts)**2)
 mse
 ```
 

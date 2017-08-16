@@ -56,8 +56,8 @@ forecasts are added to the forecasts described above.
   T <- 201 #length of series
   m <- 10 #number of series
   set.seed(1234)
-  f <- matrix(0, 2 * T, 1)
-  v <- rnorm(2 * T)
+  f <- matrix(0, 2 * T + 1, 1)
+  v <- rnorm(2 * T + 1)
   f[1] <- rnorm(1)
   theta <- 0.7
   for (t in  2:(2 * T)){

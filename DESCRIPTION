@@ -7,8 +7,8 @@ Author: Daniel Peña <daniel.pena@uc3m.es>,
     Ezequiel Smucler <ezequiels.90@gmail.com>,
     Victor Yohai <vyohai@dm.uba.ar>
 Maintainer: Ezequiel Smucler <ezequiels.90@gmail.com>
-Description: Functions to compute One-Sided Dynamic
- Principal Components introduced in Smucler, Peña and Yohai (2017)
+Description: Functions to compute one-sided dynamic
+ principal components introduced in Smucler, Peña and Yohai (2017)
  <arxiv:https://arxiv.org/abs/1708.04705>.
 License: GPL (>= 2)
 Imports: methods, Rcpp (>= 0.12.7), gdpc, forecast

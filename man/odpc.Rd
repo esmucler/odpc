@@ -84,7 +84,7 @@ If ini = 'classic', the ordinary (non-dynamic) principal components of the data 
 }
 
 \references{
-Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Unpublished Manuscript.
+Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Available at https://arxiv.org/abs/1708.04705.
 }
 
 \seealso{

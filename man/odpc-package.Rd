@@ -12,7 +12,7 @@ Computes One-Sided Dynamic Principal Components.
 Package: \tab odpc\cr
 Type: \tab Package\cr
 Version: \tab 1.0.0\cr
-Date: \tab 2017-08-15\cr
+Date: \tab 2017-08-17\cr
 Depends: \tab R (>= 3.3.1)\cr
 License: \tab GPL (>= 2)\cr
 Imports: \tab methods, Rcpp (>= 0.12.7), gdpc, forecast\cr
@@ -44,7 +44,7 @@ Maintainer: Ezequiel Smucler <ezequiels.90@gmail.com>
 }
 
 \references{
-Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Unpublished Manuscript.
+Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Available at https://arxiv.org/abs/1708.04705.
 }
 
 

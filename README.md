@@ -1,6 +1,6 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-[![Build Status](https://travis-ci.org/esmucler/gdpc.svg?branch=master)](https://travis-ci.org/esmucler/gdpc)
+[![Build Status](https://travis-ci.org/esmucler/odpc.svg?branch=master)](https://travis-ci.org/esmucler/odpc) [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/odpc)](https://cran.r-project.org/package=odpc) [![Downloads](http://cranlogs.r-pkg.org/badges/odpc)](https://cran.r-project.org/package=odpc)
 
 odpc
 ====
@@ -10,6 +10,12 @@ This package provides functions for computing One-Sided Dynamic Principal Compon
 ------------------------------------------------------------------------
 
 ### Installation
+
+You can install the **stable** version on [R CRAN](https://cran.r-project.org/package=odpc).
+
+``` r
+install.packages('odpc', dependencies = TRUE)
+```
 
 You can install the **development** version from [GitHub](https://github.com/esmucler/odpc)
 

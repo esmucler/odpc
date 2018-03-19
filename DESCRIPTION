@@ -17,6 +17,7 @@ Description: Functions to compute the one-sided dynamic
 License: GPL (>= 2)
 Imports: methods, Rcpp (>= 0.12.7), gdpc, forecast
 LinkingTo: Rcpp, RcppArmadillo (>= 0.7.500.0.0)
+Suggests: testthat
 Depends:
     R (>= 3.3.1)
 NeedsCompilation: yes

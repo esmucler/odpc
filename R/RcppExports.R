@@ -2,22 +2,22 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 getMatrixFore <- function(f, k2, h) {
-    .Call('odpc_getMatrixFore', PACKAGE = 'odpc', f, k2, h)
+    .Call(`_odpc_getMatrixFore`, f, k2, h)
 }
 
 getMatrixFitted <- function(f, k1, k2) {
-    .Call('odpc_getMatrixFitted', PACKAGE = 'odpc', f, k1, k2)
+    .Call(`_odpc_getMatrixFitted`, f, k1, k2)
 }
 
 getFini_forecast <- function(Z, k1, k2, k_tot) {
-    .Call('odpc_getFini_forecast', PACKAGE = 'odpc', Z, k1, k2, k_tot)
+    .Call(`_odpc_getFini_forecast`, Z, k1, k2, k_tot)
 }
 
 getMSE <- function(Z2k, Fitted) {
-    .Call('odpc_getMSE', PACKAGE = 'odpc', Z2k, Fitted)
+    .Call(`_odpc_getMSE`, Z2k, Fitted)
 }
 
 odpc_priv <- function(Z, k1, k2, f_ini, passf_ini, tol, niter_max, method) {
-    .Call('odpc_odpc_priv', PACKAGE = 'odpc', Z, k1, k2, f_ini, passf_ini, tol, niter_max, method)
+    .Call(`_odpc_odpc_priv`, Z, k1, k2, f_ini, passf_ini, tol, niter_max, method)
 }
 

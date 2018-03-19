@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // getMatrixFore
 arma::mat getMatrixFore(const arma::vec& f, const int& k2, const int& h);
-RcppExport SEXP odpc_getMatrixFore(SEXP fSEXP, SEXP k2SEXP, SEXP hSEXP) {
+RcppExport SEXP _odpc_getMatrixFore(SEXP fSEXP, SEXP k2SEXP, SEXP hSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -21,7 +21,7 @@ END_RCPP
 }
 // getMatrixFitted
 arma::mat getMatrixFitted(const arma::vec& f, const int& k1, const int& k2);
-RcppExport SEXP odpc_getMatrixFitted(SEXP fSEXP, SEXP k1SEXP, SEXP k2SEXP) {
+RcppExport SEXP _odpc_getMatrixFitted(SEXP fSEXP, SEXP k1SEXP, SEXP k2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -34,7 +34,7 @@ END_RCPP
 }
 // getFini_forecast
 arma::mat getFini_forecast(const arma::mat& Z, const int& k1, const int& k2, const int& k_tot);
-RcppExport SEXP odpc_getFini_forecast(SEXP ZSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP k_totSEXP) {
+RcppExport SEXP _odpc_getFini_forecast(SEXP ZSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP k_totSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -48,7 +48,7 @@ END_RCPP
 }
 // getMSE
 double getMSE(const arma::mat& Z2k, const arma::mat& Fitted);
-RcppExport SEXP odpc_getMSE(SEXP Z2kSEXP, SEXP FittedSEXP) {
+RcppExport SEXP _odpc_getMSE(SEXP Z2kSEXP, SEXP FittedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -60,7 +60,7 @@ END_RCPP
 }
 // odpc_priv
 List odpc_priv(const arma::mat& Z, const int& k1, const int& k2, const arma::vec& f_ini, const bool& passf_ini, const double& tol, const int& niter_max, const int& method);
-RcppExport SEXP odpc_odpc_priv(SEXP ZSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP f_iniSEXP, SEXP passf_iniSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP methodSEXP) {
+RcppExport SEXP _odpc_odpc_priv(SEXP ZSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP f_iniSEXP, SEXP passf_iniSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -75,4 +75,18 @@ BEGIN_RCPP
     rcpp_result_gen = Rcpp::wrap(odpc_priv(Z, k1, k2, f_ini, passf_ini, tol, niter_max, method));
     return rcpp_result_gen;
 END_RCPP
+}
+
+static const R_CallMethodDef CallEntries[] = {
+    {"_odpc_getMatrixFore", (DL_FUNC) &_odpc_getMatrixFore, 3},
+    {"_odpc_getMatrixFitted", (DL_FUNC) &_odpc_getMatrixFitted, 3},
+    {"_odpc_getFini_forecast", (DL_FUNC) &_odpc_getFini_forecast, 4},
+    {"_odpc_getMSE", (DL_FUNC) &_odpc_getMSE, 2},
+    {"_odpc_odpc_priv", (DL_FUNC) &_odpc_odpc_priv, 8},
+    {NULL, NULL, 0}
+};
+
+RcppExport void R_init_odpc(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
 }

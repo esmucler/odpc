@@ -22,5 +22,4 @@ Suggests: testthat
 Depends:
     R (>= 3.3.0)
 NeedsCompilation: yes
-
 Encoding: UTF-8

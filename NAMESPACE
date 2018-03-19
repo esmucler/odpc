@@ -1,4 +1,4 @@
-useDynLib(odpc)
+useDynLib(odpc, .registration=TRUE)
 importFrom("Rcpp", "evalCpp")
 importFrom("stats", "var", "fitted")
 importFrom("graphics","plot")

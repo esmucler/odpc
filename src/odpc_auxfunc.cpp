@@ -407,8 +407,11 @@ List roll_odpc(const arma::field<arma::mat> & data_field,
   List output(window_size);
   # pragma omp parallel for num_threads(ncores)
   for (int ind=0; ind < window_size; ind++){
-    output[ind] = odpc_priv(data_field(ind, 0), k, k, nothing, false, tol, niter_max, method);
+    List ret(1);
+    ret[0] = odpc_priv(data_field(ind, 0), k, k, nothing, false, tol, niter_max, method);
+    output[ind] = ret;
   }
+  # pragma omp barrier
   return(output);
 }
 

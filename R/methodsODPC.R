@@ -235,6 +235,21 @@ print.odpcs <- function(x, ...) {
   print(tab)
 }
 
+new_window_object <- function(object_new, object_base){
+  output <- list()
+  num_k <- length(object_new)
+  for (k in 1:num_k){
+    output[[k]] <- merge_comps(object_new[[k]], object_base)
+  }
+  return(output)
+}
+
+merge_comps <- function(object_new, object_base){
+  window_size <- length(object_new)
+  output <- lapply(1:window_size, function(w) { c(object_base[[w]], object_new[[w]])  })
+  return(output)
+}
+
 build_data_field <- function(object=NULL, Z=NULL, window_size=NULL, h=NULL){
   # Build a list of data-sets from the original data set (Z) or the residuals
   # in object
@@ -242,7 +257,8 @@ build_data_field <- function(object=NULL, Z=NULL, window_size=NULL, h=NULL){
     N <- nrow(Z)
     data_field <- lapply(1:window_size, function(w) { Z[1:(N - h - w + 1),] } )
   } else {
-    data_field <- lapply(object, function(fit) { fit$res })
+    num_comp <- length(object[[1]]) #we get the residuals from the last component
+    data_field <- lapply(object, function(fit) { fit[[num_comp]]$res })
   }
   return(data_field)
 }
@@ -253,13 +269,13 @@ get_best_fit <- function(object, Z, h, window_size, ...){
   mses <- get_ave_mse(object, Z, h, window_size)
   ind_opt <- which.min(mses)
   opt_comp <- object[[ind_opt]] # this has window_size entries
-  return(opt_comp)
+  return(list(opt_comp=opt_comp, opt_mse = min(mses), opt_ind = ind_opt))
 }
  
 get_ave_mse <- function(object, Z, h, window_size, ...){
   # Get the mean mse of h-forecast mses from object: a list of lists, first level
   # is the candidate ks, second level the computation over the rolling window
-  # of size window_size. 
+  # of size window_size, each entry of the secnd level is a list (a la of odpcs)
   N <- nrow(Z)
   m <- ncol(Z)
   num_ks <- length(object)
@@ -279,7 +295,7 @@ get_vector_mses <- function(object, Z, h, window_size){
 }
 
 get_fore_mse <- function(comp, test, h, ...){
-  fore <- forecast.odpcs(list(comp), h=h)
+  fore <- forecast.odpcs(comp, h=h)
   fore <- fore[h,]
   mse <- sum((test - fore)^2)
   return(mse)

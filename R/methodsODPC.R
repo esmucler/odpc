@@ -145,9 +145,9 @@ components.odpcs <- function(object, which_comp = 1) {
   #OUTPUT
   # A list with the desired components as entries
   
-  if (!is.odpcs(object)) {
-    stop("object should be of class odpcs")
-  }
+  # if (!is.odpcs(object)) {
+  #   stop("object should be of class odpcs")
+  # }
   if (all(!inherits(which_comp, "numeric"), !inherits(which_comp, "integer"))) {
     stop("which_comp should be numeric")
   } else if (any(!(which_comp == floor(which_comp)), which_comp <= 0, which_comp > length(object))) {
@@ -233,4 +233,53 @@ print.odpcs <- function(x, ...) {
   colnames(mat) <- c("k1", "k2", "MSE")
   tab <- data.frame(mat, row.names = nums)
   print(tab)
+}
+
+build_data_field <- function(object=NULL, Z=NULL, window_size=NULL, h=NULL){
+  # Build a list of data-sets from the original data set (Z) or the residuals
+  # in object
+  if(is.null(object)){
+    N <- nrow(Z)
+    data_field <- lapply(1:window_size, function(w) { Z[1:(N - h - w + 1),] } )
+  } else {
+    data_field <- lapply(object, function(fit) { fit$res })
+  }
+  return(data_field)
+}
+
+get_best_fit <- function(object, Z, h, window_size, ...){
+  # Find the k (indexing object) that gives the smallest h-forecast
+  # mse evaluated using a rolling window of size window_size
+  mses <- get_ave_mse(object, Z, h, window_size)
+  ind_opt <- which.min(mses)
+  opt_comp <- object[[ind_opt]] # this has window_size entries
+  return(opt_comp)
+}
+ 
+get_ave_mse <- function(object, Z, h, window_size, ...){
+  # Get the mean mse of h-forecast mses from object: a list of lists, first level
+  # is the candidate ks, second level the computation over the rolling window
+  # of size window_size. 
+  N <- nrow(Z)
+  m <- ncol(Z)
+  num_ks <- length(object)
+  mses <- matrix(NA, window_size, num_ks) #Columns of the matrix correpond to different ks
+  mses <- sapply(1:num_ks, function(ind){ get_vector_mses(object[[ind]], Z, h, window_size) })
+  mses <- mses/m
+  mses <- apply(mses, 2, mean)
+  return(mses)
+}
+
+get_vector_mses <- function(object, Z, h, window_size){
+  # Get a vector of h-forecast mses from object: a list one entry per computation over the rolling window
+  # of size window_size.
+  mses <- sapply(1:window_size, function(ind){ get_fore_mse(object[[ind]], Z[N - ind + 1,], h) })
+  return(mses)
+}
+
+get_fore_mse <- function(comp, test, h, ...){
+  fore <- forecast.odpcs(list(comp), h=h)
+  fore <- fore[h,]
+  mse <- sum((test - fore)^2)
+  return(mse)
 }

@@ -100,3 +100,108 @@ odpc <- function(Z, ks, method, ini = 'classic', tol = 1e-04, niter_max = 500) {
   output <- construct.odpcs(output, Z, fn_call)
   return(output)
 }
+
+
+#' @title Automatic choosing of tuning parameters for odpc via cross-validation
+#' @param Z Data matrix. Each column is a different time series.
+#' @param h Forecast horizon.
+#' @param k_list List of values of k to choose from.
+#' @param max_num_comp Maximum possible number of components to compute
+#' @param window_size The size of the rolling window used to estimate the forecasting error.
+#' @param ncores Number of cores to use in parallel computations.
+#' @param method A string specifying the algorithm used. Options are 'ALS' or 'mix'. See details below.
+#' @param tol Relative precision. Default is 1e-4.
+#' @param niter_max Integer. Maximum number of iterations. Default is 500.
+
+#' @return An object of class odpcs, that is, a list of length equal to the number of computed components, each computed using the optimal value of k. 
+#' 
+#' @description
+#' Computes One-Sided Dynamic Principal Components, choosing the number of components and lags automatically, to minimize an estimate
+#' of the forecasting mean squared error.
+
+#' @seealso \code{\link{odpc}}, \code{\link{forecast.odpcs}}
+cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores, method, tol = 1e-04, niter_max = 500) {
+  
+  if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
+          !inherits(Z, "xts"), !inherits(Z, "data.frame"),
+          !inherits(Z, "zoo"))) {
+    stop("Z should belong to one of the following classes: matrix, data.frame, mts, xts, zoo")
+  } else if (any(dim(Z)[2] < 2, dim(Z)[1] < 10)) {
+    stop("Z should have at least ten rows and two columns")
+  } else if (any(anyNA(Z), any(is.nan(Z)), any(is.infinite(Z)))) {
+    stop("Z should not have missing, infinite or nan values")
+  }
+  if (!inherits(tol, "numeric")) {
+    stop("tol should be numeric")
+  } else if (!all(tol < 1, tol > 0)) {
+    stop("tol be between 0 and 1")
+  }
+  if (!inherits(niter_max, "numeric")) {
+    stop("niter_max should be numeric")
+  } else if (any(!niter_max == floor(niter_max), niter_max <= 0)) {
+    stop("niter_max should be a positive integer")
+  }
+  if (!missing(method)) {
+    if (!(method %in% c('ALS', 'mix'))) {
+      stop("method should be ALS or mix")
+    }
+  }
+  
+  if (missing(method)){
+    if (ncol(Z) > 40){
+      method <- 2 # Use mix method for moderately fat data sets
+    } else {
+      method <- 1
+    }
+  } else {
+    method <- switch(method, 'ALS' = 1, 'mix' = 2)  
+  }
+  
+  ks <- c() # List of estimated optimal k for each component
+  old_best_mse <- Inf # Previous estimate of best forecast MSE
+  
+  
+  data_field <- build_data_field(Z=Z, window_size = window_size, h = h)
+  
+  fits <- grid_odpc(data_field = data_field, k_list=k_list, h=h, window_size=window_size, tol=tol,
+                    niter_max=niter_max, ncores=ncores, method=method)
+  
+  best_fit <- get_best_fit(fits, Z=Z, h=h, window_size = window_size)
+  opt_comp <- best_fit$opt_comp
+  new_best_mse <- best_fit$opt_mse
+  new_opt_k <- k_list[best_fit$opt_ind]
+  ks <- c(ks, new_opt_k)
+  num_comp <- 1
+  
+  while (new_best_mse < old_best_mse & num_comp <= max_num_comp){
+    
+    # data field is now formed by the residuals from the fit using the current optimal componentss
+    data_field <- build_data_field(opt_comp) 
+    
+    # compute another component using the previous fitted ones
+    fits <- grid_odpc(data_field = data_field, k_list=k_list, h=h, window_size=window_size, tol=tol,
+                      niter_max=niter_max, ncores=ncores, method=method)
+    
+    # append to current components the new fitted ones
+    extended_fits <- new_window_object(fits, opt_comp)
+    
+    # get the optimal k for the new component
+    best_fit <- get_best_fit(extended_fits, Z=Z, h=h, window_size = window_size)
+    
+    opt_comp <- best_fit$opt_comp
+    
+    if (best_fit$opt_mse < new_best_mse){
+      old_best_mse <- new_best_mse
+      new_best_mse <- best_fit$opt_mse
+      new_opt_k <- k_list[best_fit$opt_ind]
+      ks <- c(ks, new_opt_k)
+      num_comp <- length(ks)
+    } else {
+      old_best_mse <- new_best_mse
+    }
+  }
+  
+  output <- odpc(Z=Z, ks=ks, method=method, ini = "classic", tol=tol, niter_max=niter_max)
+  
+  return(output)
+}

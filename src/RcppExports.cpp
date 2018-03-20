@@ -76,6 +76,42 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// roll_odpc
+List roll_odpc(const arma::field<arma::mat>& data_field, const arma::uword& k, const int& h, const int& window_size, const double& tol, const int& niter_max, const int& method, const arma::uword& ncores);
+RcppExport SEXP _odpc_roll_odpc(SEXP data_fieldSEXP, SEXP kSEXP, SEXP hSEXP, SEXP window_sizeSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP methodSEXP, SEXP ncoresSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::field<arma::mat>& >::type data_field(data_fieldSEXP);
+    Rcpp::traits::input_parameter< const arma::uword& >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const int& >::type h(hSEXP);
+    Rcpp::traits::input_parameter< const int& >::type window_size(window_sizeSEXP);
+    Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< const int& >::type niter_max(niter_maxSEXP);
+    Rcpp::traits::input_parameter< const int& >::type method(methodSEXP);
+    Rcpp::traits::input_parameter< const arma::uword& >::type ncores(ncoresSEXP);
+    rcpp_result_gen = Rcpp::wrap(roll_odpc(data_field, k, h, window_size, tol, niter_max, method, ncores));
+    return rcpp_result_gen;
+END_RCPP
+}
+// grid_odpc
+List grid_odpc(const arma::field<arma::mat> data_field, const arma::vec& k_list, const arma::uword& h, const arma::uword& window_size, const double& tol, const int& niter_max, const int& method, const arma::uword& ncores);
+RcppExport SEXP _odpc_grid_odpc(SEXP data_fieldSEXP, SEXP k_listSEXP, SEXP hSEXP, SEXP window_sizeSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP methodSEXP, SEXP ncoresSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::field<arma::mat> >::type data_field(data_fieldSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type k_list(k_listSEXP);
+    Rcpp::traits::input_parameter< const arma::uword& >::type h(hSEXP);
+    Rcpp::traits::input_parameter< const arma::uword& >::type window_size(window_sizeSEXP);
+    Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< const int& >::type niter_max(niter_maxSEXP);
+    Rcpp::traits::input_parameter< const int& >::type method(methodSEXP);
+    Rcpp::traits::input_parameter< const arma::uword& >::type ncores(ncoresSEXP);
+    rcpp_result_gen = Rcpp::wrap(grid_odpc(data_field, k_list, h, window_size, tol, niter_max, method, ncores));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_odpc_getMatrixFore", (DL_FUNC) &_odpc_getMatrixFore, 3},
@@ -83,6 +119,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_odpc_getFini_forecast", (DL_FUNC) &_odpc_getFini_forecast, 4},
     {"_odpc_getMSE", (DL_FUNC) &_odpc_getMSE, 2},
     {"_odpc_odpc_priv", (DL_FUNC) &_odpc_odpc_priv, 8},
+    {"_odpc_roll_odpc", (DL_FUNC) &_odpc_roll_odpc, 8},
+    {"_odpc_grid_odpc", (DL_FUNC) &_odpc_grid_odpc, 8},
     {NULL, NULL, 0}
 };
 

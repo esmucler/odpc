@@ -273,6 +273,7 @@ get_ave_mse <- function(object, Z, h, window_size, ...){
 get_vector_mses <- function(object, Z, h, window_size){
   # Get a vector of h-forecast mses from object: a list one entry per computation over the rolling window
   # of size window_size.
+  N <- nrow(Z)
   mses <- sapply(1:window_size, function(ind){ get_fore_mse(object[[ind]], Z[N - ind + 1,], h) })
   return(mses)
 }

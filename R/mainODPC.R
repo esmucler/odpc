@@ -166,7 +166,8 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores, m
   
   data_field <- build_data_field(Z=Z, window_size = window_size, h = h)
   
-  cl <- makeCluster(ncores)
+  usable_cores <- min(detectCores(), ncores)
+  cl <- makeCluster(usable_cores)
   registerDoParallel(cl)
   
   fits <- grid_odpc(data_field = data_field, k_list=k_list, window_size=window_size, tol=tol,
@@ -284,8 +285,8 @@ crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores, method, tol = 1
   ks <- c() # List of estimated optimal k for each component
   old_best_crit <- Inf # Previous estimate of best forecast MSE
   
-  
-  cl <- makeCluster(ncores)
+  usable_cores <- min(detectCores(), ncores)
+  cl <- makeCluster(usable_cores)
   registerDoParallel(cl)
   
   fits <- grid_crit_odpc(Z = Z, k_list=k_list, tol=tol, niter_max=niter_max, method=method)

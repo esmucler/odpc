@@ -206,8 +206,9 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores, m
       old_best_mse <- new_best_mse
     }
   }
-  
-  output <- odpc(Z=Z, ks=ks, method=method, ini = "classic", tol=tol, niter_max=niter_max)
+  methods <- c('ALS', 'mix')
+  method <- methods[method]
+  output <- odpc(Z=Z, ks=as.numeric(ks), method=method, ini = "classic", tol=tol, niter_max=niter_max)
   
   on.exit(stopCluster(cl))
   

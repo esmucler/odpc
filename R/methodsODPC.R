@@ -276,7 +276,6 @@ get_ave_mse <- function(object, Z, h, window_size, ...){
   # Get the mean mse of h-forecast mses from object: a list of lists, first level
   # is the candidate ks, second level the computation over the rolling window
   # of size window_size, each entry of the secnd level is a list (a la of odpcs)
-  N <- nrow(Z)
   m <- ncol(Z)
   num_ks <- length(object)
   mses <- matrix(NA, window_size, num_ks) #Columns of the matrix correpond to different ks

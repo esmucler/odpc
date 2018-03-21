@@ -156,6 +156,9 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores, m
   } else {
     method <- switch(method, 'ALS' = 1, 'mix' = 2)  
   }
+  if (missing(window_size)){
+    window_size <- floor(0.2 * nrow(Z))
+  }
   
   ks <- c() # List of estimated optimal k for each component
   old_best_mse <- Inf # Previous estimate of best forecast MSE
@@ -163,8 +166,11 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores, m
   
   data_field <- build_data_field(Z=Z, window_size = window_size, h = h)
   
-  fits <- grid_odpc(data_field = data_field, k_list=k_list, h=h, window_size=window_size, tol=tol,
-                    niter_max=niter_max, ncores=ncores, method=method)
+  cl <- makeCluster(ncores)
+  registerDoParallel(cl)
+  
+  fits <- grid_odpc(data_field = data_field, k_list=k_list, window_size=window_size, tol=tol,
+                    niter_max=niter_max, method=method)
   
   best_fit <- get_best_fit(fits, Z=Z, h=h, window_size = window_size)
   opt_comp <- best_fit$opt_comp
@@ -179,8 +185,8 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores, m
     data_field <- build_data_field(opt_comp) 
     
     # compute another component using the previous fitted ones
-    fits <- grid_odpc(data_field = data_field, k_list=k_list, h=h, window_size=window_size, tol=tol,
-                      niter_max=niter_max, ncores=ncores, method=method)
+    fits <- grid_odpc(data_field = data_field, k_list=k_list, window_size=window_size, tol=tol,
+                      niter_max=niter_max, method=method)
     
     # append to current components the new fitted ones
     extended_fits <- new_window_object(fits, opt_comp)
@@ -203,5 +209,19 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores, m
   
   output <- odpc(Z=Z, ks=ks, method=method, ini = "classic", tol=tol, niter_max=niter_max)
   
+  on.exit(stopCluster(cl))
+  
   return(output)
+}
+
+grid_odpc <- function(data_field, k_list, window_size, tol, niter_max, method){
+    output <- list()
+    ind <- NULL
+    w <- NULL
+    output <- foreach(ind=1:length(k_list), .packages=c('odpc'))%:%
+                foreach(w=1:window_size, .packages=c('odpc'))%dopar%{    
+                  list(odpc_priv(Z = data_field[[w]], k1 = k_list[ind], k2 = k_list[ind], f_ini = c(0), passf_ini = FALSE,
+                                              tol = tol, niter_max = niter_max, method = method))
+                }
+    return(output)
 }

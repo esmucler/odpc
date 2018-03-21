@@ -179,7 +179,7 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores, m
   ks <- c(ks, new_opt_k)
   num_comp <- 1
   
-  while (new_best_mse < old_best_mse & num_comp <= max_num_comp){
+  while (new_best_mse < old_best_mse & num_comp < max_num_comp){
     
     # data field is now formed by the residuals from the fit using the current optimal componentss
     data_field <- build_data_field(opt_comp) 
@@ -298,7 +298,7 @@ crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores, method, tol = 1
   ks <- c(ks, new_opt_k)
   num_comp <- 1
   
-  while (new_best_crit < old_best_crit & num_comp <= max_num_comp){
+  while (new_best_crit < old_best_crit & num_comp < max_num_comp){
     
     # compute another component using the previous fitted ones
     fits <- grid_crit_odpc(Z = res, k_list=k_list, tol=tol, niter_max=niter_max, method=method)

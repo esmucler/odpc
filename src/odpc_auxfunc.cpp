@@ -383,66 +383,66 @@ List odpc_priv(const arma::mat & Z,
   return(ret);
 }
 
-// [[Rcpp::export]]
-List roll_odpc(const arma::field<arma::mat> & data_field,
-               const arma::uword & k,
-               const int & h,
-               const int & window_size,
-               const double & tol,
-               const int & niter_max,
-               const int & method,
-               const arma::uword & ncores) {
-  // This function computes a ODPC over a rolling window.
-  // INPUT
-  // data_field: Field with the data to be used for training (could be residuals from previous fits),
-  // k: value of k to use (k1==k2)
-  // h: steps ahead
-  // window_size: the size of the window
-  // tol: relative precision, stopping criterion
-  // niter_max: maximum number of iterations
-  // method: 1 =  ALS, 2 = CD in a, LS in B
-  // OUTPUT
-  // a list of the same length as windows_size, each entry being an ODPC
-  arma::vec nothing = zeros(2);
-  List output(window_size);
-  # pragma omp parallel for num_threads(ncores)
-  for (int ind=0; ind < window_size; ind++){
-    List ret(1);
-    ret[0] = odpc_priv(data_field(ind, 0), k, k, nothing, false, tol, niter_max, method);
-    output[ind] = ret;
-  }
-  # pragma omp barrier
-  return(output);
-}
-
-// [[Rcpp::export]]
-List grid_odpc(const arma::field<arma::mat> data_field,
-               const arma::vec & k_list,
-               const arma::uword & h,
-               const arma::uword & window_size,
-               const double & tol,
-               const int & niter_max,
-               const int & method,
-               const arma::uword & ncores) {
-  // This function computes a ODPC for each k in k_list, over a rolling window of size window_size.
-  // INPUT
-  // data_field: field with the data to be used for training (could be residuals from previous fits),
-  // one entry per window size
-  // k_list: list of ks to use (k1==k2)
-  // h: number of steps ahead, only used for determining the training set
-  // window_size: the size of the rolling window
-  // tol: relative precision, stopping criterion
-  // niter_max: maximum number of iterations
-  // method: 1 =  ALS, 2 = CD in a, LS in B
-  // OUTPUT
-  // a list of the same length as k_list, each entry being a list of ODPCs computed over the rolling window
-  // for the corresponding value of k
-  
-  arma::uword k_list_len = k_list.n_elem;
-  List output(k_list_len);
-
-  for (arma::uword ind =0; ind < k_list_len; ind++){
-    output[ind] = roll_odpc(data_field, k_list[ind], h, window_size, tol, niter_max, method, ncores);
-  }
-  return(output);
-}
+// // [[Rcpp::export]]
+// List roll_odpc(const arma::field<arma::mat> & data_field,
+//                const arma::uword & k,
+//                const int & h,
+//                const int & window_size,
+//                const double & tol,
+//                const int & niter_max,
+//                const int & method,
+//                const arma::uword & ncores) {
+//   // This function computes a ODPC over a rolling window.
+//   // INPUT
+//   // data_field: Field with the data to be used for training (could be residuals from previous fits),
+//   // k: value of k to use (k1==k2)
+//   // h: steps ahead
+//   // window_size: the size of the window
+//   // tol: relative precision, stopping criterion
+//   // niter_max: maximum number of iterations
+//   // method: 1 =  ALS, 2 = CD in a, LS in B
+//   // OUTPUT
+//   // a list of the same length as windows_size, each entry being an ODPC
+//   arma::vec nothing = zeros(2);
+//   List output(window_size);
+//   # pragma omp parallel for num_threads(ncores)
+//   for (int ind=0; ind < window_size; ind++){
+//     List ret(1);
+//     ret[0] = odpc_priv(data_field(ind, 0), k, k, nothing, false, tol, niter_max, method);
+//     output[ind] = ret;
+//   }
+//   # pragma omp barrier
+//   return(output);
+// }
+// 
+// // [[Rcpp::export]]
+// List grid_odpc(const arma::field<arma::mat> data_field,
+//                const arma::vec & k_list,
+//                const arma::uword & h,
+//                const arma::uword & window_size,
+//                const double & tol,
+//                const int & niter_max,
+//                const int & method,
+//                const arma::uword & ncores) {
+//   // This function computes a ODPC for each k in k_list, over a rolling window of size window_size.
+//   // INPUT
+//   // data_field: field with the data to be used for training (could be residuals from previous fits),
+//   // one entry per window size
+//   // k_list: list of ks to use (k1==k2)
+//   // h: number of steps ahead, only used for determining the training set
+//   // window_size: the size of the rolling window
+//   // tol: relative precision, stopping criterion
+//   // niter_max: maximum number of iterations
+//   // method: 1 =  ALS, 2 = CD in a, LS in B
+//   // OUTPUT
+//   // a list of the same length as k_list, each entry being a list of ODPCs computed over the rolling window
+//   // for the corresponding value of k
+//   
+//   arma::uword k_list_len = k_list.n_elem;
+//   List output(k_list_len);
+// 
+//   for (arma::uword ind =0; ind < k_list_len; ind++){
+//     output[ind] = roll_odpc(data_field, k_list[ind], h, window_size, tol, niter_max, method, ncores);
+//   }
+//   return(output);
+// }

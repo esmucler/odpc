@@ -226,3 +226,115 @@ grid_odpc <- function(data_field, k_list, window_size, tol, niter_max, method){
                 }
     return(output)
 }
+
+
+#' @title Automatic choosing of tuning parameters for odpc via the minimization of an information criterion
+#' @param Z Data matrix. Each column is a different time series.
+#' @param k_list List of values of k to choose from.
+#' @param max_num_comp Maximum possible number of components to compute
+#' @param ncores Number of cores to use in parallel computations.
+#' @param method A string specifying the algorithm used. Options are 'ALS' or 'mix'. See details below.
+#' @param tol Relative precision. Default is 1e-4.
+#' @param niter_max Integer. Maximum number of iterations. Default is 500.
+
+#' @return An object of class odpcs, that is, a list of length equal to the number of computed components, each computed using the optimal value of k. 
+#' 
+#' @description
+#' Computes One-Sided Dynamic Principal Components, choosing the number of components and lags automatically, to minimize an 
+#' information criterion
+
+#' @seealso \code{\link{odpc}}, \code{\link{cv.odpc}}, \code{\link{forecast.odpcs}}
+crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores, method, tol = 1e-04, niter_max = 500) {
+  
+  if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
+          !inherits(Z, "xts"), !inherits(Z, "data.frame"),
+          !inherits(Z, "zoo"))) {
+    stop("Z should belong to one of the following classes: matrix, data.frame, mts, xts, zoo")
+  } else if (any(dim(Z)[2] < 2, dim(Z)[1] < 10)) {
+    stop("Z should have at least ten rows and two columns")
+  } else if (any(anyNA(Z), any(is.nan(Z)), any(is.infinite(Z)))) {
+    stop("Z should not have missing, infinite or nan values")
+  }
+  if (!inherits(tol, "numeric")) {
+    stop("tol should be numeric")
+  } else if (!all(tol < 1, tol > 0)) {
+    stop("tol be between 0 and 1")
+  }
+  if (!inherits(niter_max, "numeric")) {
+    stop("niter_max should be numeric")
+  } else if (any(!niter_max == floor(niter_max), niter_max <= 0)) {
+    stop("niter_max should be a positive integer")
+  }
+  if (!missing(method)) {
+    if (!(method %in% c('ALS', 'mix'))) {
+      stop("method should be ALS or mix")
+    }
+  }
+  
+  if (missing(method)){
+    if (ncol(Z) > 40){
+      method <- 2 # Use mix method for moderately fat data sets
+    } else {
+      method <- 1
+    }
+  } else {
+    method <- switch(method, 'ALS' = 1, 'mix' = 2)  
+  }
+  
+  ks <- c() # List of estimated optimal k for each component
+  old_best_crit <- Inf # Previous estimate of best forecast MSE
+  
+  
+  cl <- makeCluster(ncores)
+  registerDoParallel(cl)
+  
+  fits <- grid_crit_odpc(Z = Z, k_list=k_list, tol=tol, niter_max=niter_max, method=method)
+  
+  best_fit <- get_best_fit_crit(fits, Z=Z)
+  opt_comp <- best_fit$opt_comp
+  new_best_crit <- best_fit$opt_crit
+  new_opt_k <- k_list[best_fit$opt_ind]
+  res <- opt_comp[[1]]$res
+  ks <- c(ks, new_opt_k)
+  num_comp <- 1
+  
+  while (new_best_crit < old_best_crit & num_comp <= max_num_comp){
+    
+    # compute another component using the previous fitted ones
+    fits <- grid_crit_odpc(Z = res, k_list=k_list, tol=tol, niter_max=niter_max, method=method)
+    
+    # get the optimal k for the new component
+    best_fit <- get_best_fit_crit(fits, Z=res)
+    
+    cand_opt_comp <- best_fit$opt_comp
+    
+    if (best_fit$opt_crit < new_best_crit){
+      old_best_crit <- new_best_crit
+      new_best_crit <- best_fit$opt_crit
+      new_opt_k <- k_list[best_fit$opt_ind]
+      opt_comp <- c(opt_comp, cand_opt_comp)
+      ks <- c(ks, new_opt_k)
+      num_comp <- length(ks)
+    } else {
+      old_best_crit <- new_best_crit
+    }
+  }
+  
+  methods <- c('ALS', 'mix')
+  method <- methods[method]
+  fn_call <- match.call()
+  output <- construct.odpcs(opt_comp, Z, fn_call)
+  on.exit(stopCluster(cl))
+  
+  return(output)
+}
+
+grid_crit_odpc <- function(Z, k_list, tol, niter_max, method){
+  output <- list()
+  ind <- NULL
+  output <- foreach(ind=1:length(k_list), .packages=c('odpc'))%dopar%{    
+      list(odpc_priv(Z = Z, k1 = k_list[ind], k2 = k_list[ind], f_ini = c(0), passf_ini = FALSE,
+                     tol = tol, niter_max = niter_max, method = method))
+    }
+  return(output)
+}

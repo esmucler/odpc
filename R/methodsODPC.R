@@ -299,3 +299,20 @@ get_fore_mse <- function(comp, test, h, ...){
   mse <- sum((test - fore)^2)
   return(mse)
 }
+
+get_best_fit_crit <- function(object, Z){
+  crits <- sapply(object, function(comp){ get_crit(comp=comp, Z=Z)})
+  ind_opt <- which.min(crits)
+  opt_comp <- object[[ind_opt]]
+  opt_crit <- min(crits)
+  return(list(opt_comp=opt_comp, opt_crit = opt_crit, opt_ind = ind_opt))
+}
+
+get_crit <- function(comp, Z){
+  num_comp <- length(comp)
+  m <- ncol(Z)
+  T_c <- nrow(comp[[num_comp]]$res)
+  mse <- comp[[num_comp]]$mse
+  k <- comp[[num_comp]]$k1
+  crit <- T_c * log(mse * m) + k * (m + T_c)/m * log(min(T_c, m)) 
+}

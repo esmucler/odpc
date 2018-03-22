@@ -58,10 +58,7 @@ construct.odpc <- function(out, data) {
 
 fitted.odpc <- function(object, ...) {
   # Returns the fitted values of a odpc object
-  if (!is.odpc(object)){
-    stop("object should be of class odpc")
-  }
-  matF <- getMatrixFitted(object$f, object$k1, object$k2)
+  matF <- getMatrixFitted(object$f, object$k2, object$k2)
   fitted <- matF %*% rbind(as.vector(object$alpha), as.matrix(object$B))
   colnames(fitted) <- colnames(object$B)
   return(fitted)
@@ -161,9 +158,6 @@ components.odpcs <- function(object, which_comp = 1) {
 
 fitted.odpcs <- function(object, num_comp = 1, ...) {
   # Returns the fitted values of a odpcs object using components 1,...,num_comp
-  if (!is.odpcs(object)) {
-    stop("object should be of class odpcs")
-  }
   if (all(!inherits(num_comp, "numeric"), !inherits(num_comp, "integer"))) {
     stop("num_comp should be numeric")
   } else if (any(!(num_comp == floor(num_comp)), num_comp <= 0, num_comp > length(object))) {
@@ -298,6 +292,36 @@ get_fore_mse <- function(comp, test, h, ...){
   fore <- fore[h,]
   mse <- sum((test - fore)^2)
   return(mse)
+}
+
+convert_rename <- function(fits){
+  # The output of grid_odpc is complicated. It is a list, with one entry per element in k_list.
+  # In the next level we get a matrix with one column, each row being a list corresponding to
+  # a window. In there, there's another matrix with one column, each entry being the elements of a 
+  # componente. This function takes this thing and outputs a list of lists. First level for elements
+  # in k_list, next windows, in here are the components
+  marrano <- lapply(fits, convert_rename_window)
+  return(marrano)
+}
+
+convert_rename_window <- function(fits_by_w){
+  fits_by_w <- lapply(fits_by_w[,1], convert_rename_comp)
+  return(fits_by_w)
+}
+
+
+# pre_ret(0, 0) = alpha;
+# pre_ret(1, 0) = B;
+# pre_ret(2, 0) = k2_vec;
+# pre_ret(3, 0) = mse_vec;
+# pre_ret(4, 0) = fout;
+# pre_ret(5, 0) = res;
+
+convert_rename_comp <- function(comp){
+  new_comp <- list(alpha=as.numeric(comp[,1][[1]]), B = as.matrix(comp[,1][[2]]), k2 = as.numeric(comp[,1][[3]]),
+                   mse = as.numeric(comp[,1][[4]]), f = as.numeric(comp[,1][[5]]), res = as.matrix(comp[,1][[6]]))
+  new_comp <- list(new_comp)
+  return(new_comp)
 }
 
 get_best_fit_crit <- function(object, Z){

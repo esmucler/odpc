@@ -17,7 +17,7 @@ window_size <- 10
 k_list <- c(1, 2)
 
 for (h in hs){
-  test_that(paste0("Correct dimensions, first component for m<T"), {
+  test_that(paste0("Correct dimensions, first component for m=T"), {
   data_field <- build_data_field(Z=x_small, h=h, window_size = window_size)
   nrows <- sapply(data_field, nrow)
   expect_equal(nrows, N - h - 0:(window_size-1))
@@ -25,7 +25,7 @@ for (h in hs){
 }
 
 for (h in hs){
-  test_that(paste0("Correct dimensions, first component for m<T"), {
+  test_that(paste0("Correct dimensions, second component for m=T"), {
     data_field <- build_data_field(Z=x_small, h=h, window_size = window_size)
     output <- grid_odpc(data_field=data_field, k_list=k_list, window_size = window_size, tol=1e-2, niter_max=100, method=2)
     data_field <- build_data_field(output[[2]])

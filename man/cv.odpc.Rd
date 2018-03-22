@@ -4,8 +4,8 @@
 \alias{cv.odpc}
 \title{Automatic choosing of tuning parameters for odpc via cross-validation}
 \usage{
-cv.odpc(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores, method,
-  tol = 1e-04, niter_max = 500)
+cv.odpc(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k = 1,
+  ncores_w = 1, method, tol = 1e-04, niter_max = 500)
 }
 \arguments{
 \item{Z}{Data matrix. Each column is a different time series.}
@@ -18,7 +18,9 @@ cv.odpc(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores, method,
 
 \item{window_size}{The size of the rolling window used to estimate the forecasting error.}
 
-\item{ncores}{Number of cores to use in parallel computations.}
+\item{ncores_k}{Number of cores to parallelise over the list of ks.}
+
+\item{ncores_w}{Number of cores to parallelise over the rolling window (nested in the ks).}
 
 \item{method}{A string specifying the algorithm used. Options are 'ALS' or 'mix'. See details below.}
 

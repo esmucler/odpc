@@ -108,7 +108,8 @@ odpc <- function(Z, ks, method, ini = 'classic', tol = 1e-04, niter_max = 500) {
 #' @param k_list List of values of k to choose from.
 #' @param max_num_comp Maximum possible number of components to compute
 #' @param window_size The size of the rolling window used to estimate the forecasting error.
-#' @param ncores Number of cores to use in parallel computations.
+#' @param ncores_k Number of cores to parallelise over the list of ks.
+#' @param ncores_w Number of cores to parallelise over the rolling window (nested in the ks).
 #' @param method A string specifying the algorithm used. Options are 'ALS' or 'mix'. See details below.
 #' @param tol Relative precision. Default is 1e-4.
 #' @param niter_max Integer. Maximum number of iterations. Default is 500.
@@ -120,7 +121,7 @@ odpc <- function(Z, ks, method, ini = 'classic', tol = 1e-04, niter_max = 500) {
 #' of the forecasting mean squared error.
 
 #' @seealso \code{\link{odpc}}, \code{\link{forecast.odpcs}}
-cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores, method, tol = 1e-04, niter_max = 500) {
+cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=1, ncores_w=1, method, tol = 1e-04, niter_max = 500) {
   
   if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
           !inherits(Z, "xts"), !inherits(Z, "data.frame"),
@@ -163,14 +164,14 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores, m
   ks <- c() # List of estimated optimal k for each component
   old_best_mse <- Inf # Previous estimate of best forecast MSE
   
-  usable_cores <- min(detectCores(), ncores)
+  usable_cores <- min(detectCores(), ncores_k)
   cl <- makeCluster(usable_cores)
   registerDoParallel(cl)
   
   data_field <- build_data_field(Z=Z, window_size = window_size, h = h)
   
   fits <- grid_odpc(data_field = data_field, k_list=k_list, window_size=window_size, tol=tol,
-                    niter_max=niter_max, method=method)
+                    niter_max=niter_max, method=method, ncores_w=ncores_w)
   
   best_fit <- get_best_fit(fits, Z=Z, h=h, window_size = window_size)
   opt_comp <- best_fit$opt_comp
@@ -186,8 +187,7 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores, m
     
     # compute another component using the previous fitted ones
     fits <- grid_odpc(data_field = data_field, k_list=k_list, window_size=window_size, tol=tol,
-                      niter_max=niter_max, method=method)
-    
+                      niter_max=niter_max, method=method, ncores_w=ncores_w)
     # append to current components the new fitted ones
     extended_fits <- new_window_object(fits, opt_comp)
     
@@ -213,15 +213,14 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores, m
   return(output)
 }
 
-grid_odpc <- function(data_field, k_list, window_size, tol, niter_max, method){
+grid_odpc <- function(data_field, k_list, window_size, tol, niter_max, method, ncores_w=1){
     output <- list()
     ind <- NULL
-    w <- NULL
-    output <- foreach(ind=1:length(k_list), .packages=c('odpc'))%:%
-                foreach(w=1:window_size, .packages=c('odpc'))%dopar%{    
-                  list(odpc_priv(Z = data_field[[w]], k1 = k_list[ind], k2 = k_list[ind], f_ini = c(0), passf_ini = FALSE,
-                                              tol = tol, niter_max = niter_max, method = method))
-                }
+    output <- foreach(ind=1:length(k_list), .packages=c('odpc'))%dopar%{    
+                  odpc:::roll_odpc(data_field=data_field, k=k_list[ind], window_size=window_size, tol=tol,
+                            niter_max=niter_max, method=method, ncores=ncores_w)
+    }
+    output <- convert_rename(output)
     return(output)
 }
 
@@ -332,6 +331,6 @@ grid_crit_odpc <- function(Z, k_list, tol, niter_max, method){
   output <- foreach(ind=1:length(k_list), .packages=c('odpc'))%dopar%{    
       list(odpc_priv(Z = Z, k1 = k_list[ind], k2 = k_list[ind], f_ini = c(0), passf_ini = FALSE,
                      tol = tol, niter_max = niter_max, method = method))
-    }
+  }
   return(output)
 }

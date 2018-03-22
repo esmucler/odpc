@@ -76,9 +76,9 @@ odpc <- function(Z, ks, method, ini = 'classic', tol = 1e-04, niter_max = 500) {
   
   if (ini == 'classic'){
     for (iter in seq_len(num_comp)){
-      output[[iter]] <- odpc_priv(Z = res,  k1 = ks[iter, 1], k2 = ks[iter, 2], f_ini = 0,
-                                  passf_ini = FALSE, tol = tol, niter_max = niter_max,
-                                  method = method)
+      output[[iter]] <- convert_rename_comp(odpc_priv(Z = res,  k1 = ks[iter, 1], k2 = ks[iter, 2], f_ini = 0,
+                                       passf_ini = FALSE, tol = tol, niter_max = niter_max,
+                                       method = method), wrap=FALSE)
       res <- output[[iter]]$res
     }
   } else if (ini == 'gdpc'){
@@ -86,9 +86,9 @@ odpc <- function(Z, ks, method, ini = 'classic', tol = 1e-04, niter_max = 500) {
       fit_gdpc <- gdpc(Z = res, k = ks[iter, 1], tol = tol, niter_max = niter_max)
       f_ini <- fit_gdpc$f[(ks[iter, 1] + 1):length(fit_gdpc$f)]
       # f_ini <- fit_gdpc$f[1:(length(fit_gdpc$f) - ks[iter, 1])]
-      output[[iter]] <- odpc_priv(Z = res, k1 = ks[iter, 1], k2 = ks[iter, 2], f_ini = f_ini,
-                                   passf_ini = TRUE, tol = tol, niter_max = niter_max,
-                                   method = method)
+      output[[iter]] <- convert_rename_comp(odpc_priv(Z = res, k1 = ks[iter, 1], k2 = ks[iter, 2], f_ini = f_ini,
+                                             passf_ini = TRUE, tol = tol, niter_max = niter_max,
+                                             method = method), wrap=FALSE)
       res <- output[[iter]]$res
     }
   }
@@ -113,6 +113,9 @@ odpc <- function(Z, ks, method, ini = 'classic', tol = 1e-04, niter_max = 500) {
 #' @param method A string specifying the algorithm used. Options are 'ALS' or 'mix'. See details below.
 #' @param tol Relative precision. Default is 1e-4.
 #' @param niter_max Integer. Maximum number of iterations. Default is 500.
+#' @param train_tol Relative precision used in cross-validation. Default is 1e-2.
+#' @param train_niter_max Integer. Maximum number of iterations used in cross-validation. Default is 100.
+
 
 #' @return An object of class odpcs, that is, a list of length equal to the number of computed components, each computed using the optimal value of k. 
 #' 
@@ -121,7 +124,7 @@ odpc <- function(Z, ks, method, ini = 'classic', tol = 1e-04, niter_max = 500) {
 #' of the forecasting mean squared error.
 
 #' @seealso \code{\link{odpc}}, \code{\link{forecast.odpcs}}
-cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=1, ncores_w=1, method, tol = 1e-04, niter_max = 500) {
+cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=1, ncores_w=1, method, tol = 1e-04, niter_max = 500, train_tol = 1e-2, train_niter_max = 100) {
   
   if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
           !inherits(Z, "xts"), !inherits(Z, "data.frame"),
@@ -170,8 +173,8 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=
   
   data_field <- build_data_field(Z=Z, window_size = window_size, h = h)
   
-  fits <- grid_odpc(data_field = data_field, k_list=k_list, window_size=window_size, tol=tol,
-                    niter_max=niter_max, method=method, ncores_w=ncores_w)
+  fits <- grid_odpc(data_field = data_field, k_list=k_list, window_size=window_size, tol=train_tol,
+                    niter_max=train_niter_max, method=method, ncores_w=ncores_w)
   
   best_fit <- get_best_fit(fits, Z=Z, h=h, window_size = window_size)
   opt_comp <- best_fit$opt_comp
@@ -186,8 +189,8 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=
     data_field <- build_data_field(opt_comp) 
     
     # compute another component using the previous fitted ones
-    fits <- grid_odpc(data_field = data_field, k_list=k_list, window_size=window_size, tol=tol,
-                      niter_max=niter_max, method=method, ncores_w=ncores_w)
+    fits <- grid_odpc(data_field = data_field, k_list=k_list, window_size=window_size, tol=train_tol,
+                      niter_max=train_niter_max, method=method, ncores_w=ncores_w)
     # append to current components the new fitted ones
     extended_fits <- new_window_object(fits, opt_comp)
     
@@ -329,8 +332,8 @@ grid_crit_odpc <- function(Z, k_list, tol, niter_max, method){
   output <- list()
   ind <- NULL
   output <- foreach(ind=1:length(k_list), .packages=c('odpc'))%dopar%{    
-      list(odpc_priv(Z = Z, k1 = k_list[ind], k2 = k_list[ind], f_ini = c(0), passf_ini = FALSE,
-                     tol = tol, niter_max = niter_max, method = method))
+      convert_rename_comp(odpc_priv(Z = Z, k1 = k_list[ind], k2 = k_list[ind], f_ini = c(0), passf_ini = FALSE,
+                     tol = tol, niter_max = niter_max, method = method), wrap=TRUE)
   }
   return(output)
 }

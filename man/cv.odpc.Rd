@@ -5,7 +5,8 @@
 \title{Automatic choosing of tuning parameters for odpc via cross-validation}
 \usage{
 cv.odpc(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k = 1,
-  ncores_w = 1, method, tol = 1e-04, niter_max = 500)
+  ncores_w = 1, method, tol = 1e-04, niter_max = 500, train_tol = 0.01,
+  train_niter_max = 100)
 }
 \arguments{
 \item{Z}{Data matrix. Each column is a different time series.}
@@ -27,6 +28,10 @@ cv.odpc(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k = 1,
 \item{tol}{Relative precision. Default is 1e-4.}
 
 \item{niter_max}{Integer. Maximum number of iterations. Default is 500.}
+
+\item{train_tol}{Relative precision used in cross-validation. Default is 1e-2.}
+
+\item{train_niter_max}{Integer. Maximum number of iterations used in cross-validation. Default is 100.}
 }
 \value{
 An object of class odpcs, that is, a list of length equal to the number of computed components, each computed using the optimal value of k.

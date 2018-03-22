@@ -21,10 +21,6 @@ odpc_priv <- function(Z, k1, k2, f_ini, passf_ini, tol, niter_max, method) {
     .Call(`_odpc_odpc_priv`, Z, k1, k2, f_ini, passf_ini, tol, niter_max, method)
 }
 
-wrap_odpc_priv <- function(Z, k1, k2, f_ini, passf_ini, tol, niter_max, method) {
-    .Call(`_odpc_wrap_odpc_priv`, Z, k1, k2, f_ini, passf_ini, tol, niter_max, method)
-}
-
 roll_odpc <- function(data_field, k, window_size, tol, niter_max, method, ncores) {
     .Call(`_odpc_roll_odpc`, data_field, k, window_size, tol, niter_max, method, ncores)
 }

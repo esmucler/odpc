@@ -59,7 +59,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // odpc_priv
-List odpc_priv(const arma::mat& Z, const int& k1, const int& k2, const arma::vec& f_ini, const bool& passf_ini, const double& tol, const int& niter_max, const int& method);
+arma::field<arma::mat> odpc_priv(const arma::mat& Z, const int& k1, const int& k2, const arma::vec& f_ini, const bool& passf_ini, const double& tol, const int& niter_max, const int& method);
 RcppExport SEXP _odpc_odpc_priv(SEXP ZSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP f_iniSEXP, SEXP passf_iniSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -73,24 +73,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int& >::type niter_max(niter_maxSEXP);
     Rcpp::traits::input_parameter< const int& >::type method(methodSEXP);
     rcpp_result_gen = Rcpp::wrap(odpc_priv(Z, k1, k2, f_ini, passf_ini, tol, niter_max, method));
-    return rcpp_result_gen;
-END_RCPP
-}
-// wrap_odpc_priv
-arma::field<arma::mat> wrap_odpc_priv(const arma::mat& Z, const int& k1, const int& k2, const arma::vec& f_ini, const bool& passf_ini, const double& tol, const int& niter_max, const int& method);
-RcppExport SEXP _odpc_wrap_odpc_priv(SEXP ZSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP f_iniSEXP, SEXP passf_iniSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP methodSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< const int& >::type k1(k1SEXP);
-    Rcpp::traits::input_parameter< const int& >::type k2(k2SEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type f_ini(f_iniSEXP);
-    Rcpp::traits::input_parameter< const bool& >::type passf_ini(passf_iniSEXP);
-    Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
-    Rcpp::traits::input_parameter< const int& >::type niter_max(niter_maxSEXP);
-    Rcpp::traits::input_parameter< const int& >::type method(methodSEXP);
-    rcpp_result_gen = Rcpp::wrap(wrap_odpc_priv(Z, k1, k2, f_ini, passf_ini, tol, niter_max, method));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -118,7 +100,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_odpc_getFini_forecast", (DL_FUNC) &_odpc_getFini_forecast, 4},
     {"_odpc_getMSE", (DL_FUNC) &_odpc_getMSE, 2},
     {"_odpc_odpc_priv", (DL_FUNC) &_odpc_odpc_priv, 8},
-    {"_odpc_wrap_odpc_priv", (DL_FUNC) &_odpc_wrap_odpc_priv, 8},
     {"_odpc_roll_odpc", (DL_FUNC) &_odpc_roll_odpc, 7},
     {NULL, NULL, 0}
 };

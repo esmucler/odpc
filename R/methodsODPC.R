@@ -309,18 +309,14 @@ convert_rename_window <- function(fits_by_w){
   return(fits_by_w)
 }
 
-
-# pre_ret(0, 0) = alpha;
-# pre_ret(1, 0) = B;
-# pre_ret(2, 0) = k2_vec;
-# pre_ret(3, 0) = mse_vec;
-# pre_ret(4, 0) = fout;
-# pre_ret(5, 0) = res;
-
-convert_rename_comp <- function(comp){
+convert_rename_comp <- function(comp, wrap=TRUE){
   new_comp <- list(alpha=as.numeric(comp[,1][[1]]), B = as.matrix(comp[,1][[2]]), k2 = as.numeric(comp[,1][[3]]),
-                   mse = as.numeric(comp[,1][[4]]), f = as.numeric(comp[,1][[5]]), res = as.matrix(comp[,1][[6]]))
-  new_comp <- list(new_comp)
+                   mse = as.numeric(comp[,1][[4]]), f = as.numeric(comp[,1][[5]]), res = as.matrix(comp[,1][[6]]),
+                   k1=as.numeric(comp[,1][[7]]), criter=as.numeric(comp[,1][[8]]), conv = as.logical(comp[,1][[9]]),
+                   a=as.numeric(comp[,1][[10]]))
+  if(wrap){
+    new_comp <- list(new_comp)
+  }
   return(new_comp)
 }
 

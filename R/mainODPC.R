@@ -212,7 +212,7 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=
   methods <- c('ALS', 'mix')
   method <- methods[method]
   output <- odpc(Z=Z, ks=as.numeric(ks), method=method, ini = "classic", tol=tol, niter_max=niter_max)
-  
+  on.exit(stopCluster(cl))
   return(output)
 }
 
@@ -324,7 +324,7 @@ crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores, method, tol = 1
   method <- methods[method]
   fn_call <- match.call()
   output <- construct.odpcs(opt_comp, Z, fn_call)
-  
+  on.exit(stopCluster(cl))
   return(output)
 }
 

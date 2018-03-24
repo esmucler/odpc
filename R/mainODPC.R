@@ -191,7 +191,9 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=
     # compute another component using the previous fitted ones
     fits <- grid_odpc(data_field = data_field, k_list=k_list, window_size=window_size, tol=train_tol,
                       niter_max=train_niter_max, method=method, ncores_w=ncores_w)
-    # append to current components the new fitted ones
+    # append to current components the new fitted ones; extended fits has one entry per k; each of these
+    # entries has window_size entries; in each of these we have: the current optimal component computed along the
+    # rolling window, with the latest component appended at the end
     extended_fits <- new_window_object(fits, opt_comp)
     
     # get the optimal k for the new component
@@ -313,6 +315,7 @@ crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores, method, tol = 1
       new_best_crit <- best_fit$opt_crit
       new_opt_k <- k_list[best_fit$opt_ind]
       opt_comp <- c(opt_comp, cand_opt_comp)
+      res <- cand_opt_comp[[1]]$res
       ks <- c(ks, new_opt_k)
       num_comp <- length(ks)
     } else {

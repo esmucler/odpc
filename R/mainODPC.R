@@ -306,7 +306,7 @@ crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores, method, tol = 1
     fits <- grid_crit_odpc(Z = res, k_list=k_list, tol=tol, niter_max=niter_max, method=method)
     
     # get the optimal k for the new component
-    best_fit <- get_best_fit_crit(fits, Z=res, num_comp=num_comp)
+    best_fit <- get_best_fit_crit(fits, Z=res, num_comp=num_comp + 1)
     
     cand_opt_comp <- best_fit$opt_comp
     

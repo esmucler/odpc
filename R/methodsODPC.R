@@ -333,5 +333,5 @@ get_crit <- function(comp, Z, num_comp){
   T_c <- nrow(comp[[1]]$res)
   mse <- comp[[1]]$mse
   k <- comp[[1]]$k1
-  crit <- T_c * log(mse) +  num_comp * (2 * k + 3) * m * log(min(T_c, m)) 
+  crit <- T_c * log(mse) +  num_comp * (k + 1) * log(min(T_c, m)) 
 }

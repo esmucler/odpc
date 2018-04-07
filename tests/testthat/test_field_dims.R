@@ -27,7 +27,9 @@ for (h in hs){
 for (h in hs){
   test_that(paste0("Correct dimensions, second component for m=T"), {
     data_field <- build_data_field(Z=x_small, h=h, window_size = window_size)
-    output <- grid_odpc(data_field=data_field, k_list=k_list, window_size = window_size, tol=1e-2, niter_max=100, method=2)
+    response_field <- build_response_field(data_field=data_field, k_trun = 2 * k_list)
+    output <- grid_odpc(data_field=data_field, response_field=response_field, num_comp=1,
+                        k_maxs=2*k_list, k_list=k_list, window_size = window_size, tol=1e-2, niter_max=100, method=2)
     data_field <- build_data_field(output[[2]])
     nrows <- sapply(data_field, nrow)
     expect_equal(nrows, N - h - 0:(window_size-1) - 2 * k_list[2])

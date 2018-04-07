@@ -33,63 +33,70 @@ BEGIN_RCPP
 END_RCPP
 }
 // getFini_forecast
-arma::mat getFini_forecast(const arma::mat& Z, const int& k1, const int& k2, const int& k_tot);
-RcppExport SEXP _odpc_getFini_forecast(SEXP ZSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP k_totSEXP) {
+arma::mat getFini_forecast(const arma::mat& Z, const arma::mat& resp, const int& k1, const int& k2, const arma::uword& num_comp);
+RcppExport SEXP _odpc_getFini_forecast(SEXP ZSEXP, SEXP respSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP num_compSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type resp(respSEXP);
     Rcpp::traits::input_parameter< const int& >::type k1(k1SEXP);
     Rcpp::traits::input_parameter< const int& >::type k2(k2SEXP);
-    Rcpp::traits::input_parameter< const int& >::type k_tot(k_totSEXP);
-    rcpp_result_gen = Rcpp::wrap(getFini_forecast(Z, k1, k2, k_tot));
+    Rcpp::traits::input_parameter< const arma::uword& >::type num_comp(num_compSEXP);
+    rcpp_result_gen = Rcpp::wrap(getFini_forecast(Z, resp, k1, k2, num_comp));
     return rcpp_result_gen;
 END_RCPP
 }
 // getMSE
-double getMSE(const arma::mat& Z2k, const arma::mat& Fitted);
-RcppExport SEXP _odpc_getMSE(SEXP Z2kSEXP, SEXP FittedSEXP) {
+double getMSE(const arma::mat& resp, const arma::mat& Fitted);
+RcppExport SEXP _odpc_getMSE(SEXP respSEXP, SEXP FittedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type Z2k(Z2kSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type resp(respSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type Fitted(FittedSEXP);
-    rcpp_result_gen = Rcpp::wrap(getMSE(Z2k, Fitted));
+    rcpp_result_gen = Rcpp::wrap(getMSE(resp, Fitted));
     return rcpp_result_gen;
 END_RCPP
 }
 // odpc_priv
-arma::field<arma::mat> odpc_priv(const arma::mat& Z, const int& k1, const int& k2, const arma::vec& f_ini, const bool& passf_ini, const double& tol, const int& niter_max, const int& method);
-RcppExport SEXP _odpc_odpc_priv(SEXP ZSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP f_iniSEXP, SEXP passf_iniSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP methodSEXP) {
+arma::field<arma::mat> odpc_priv(const arma::mat& Z, const arma::mat& resp, const int& k_tot_max, const int& k1, const int& k2, const arma::uword& num_comp, const arma::vec& f_ini, const bool& passf_ini, const double& tol, const int& niter_max, const int& method);
+RcppExport SEXP _odpc_odpc_priv(SEXP ZSEXP, SEXP respSEXP, SEXP k_tot_maxSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP num_compSEXP, SEXP f_iniSEXP, SEXP passf_iniSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type resp(respSEXP);
+    Rcpp::traits::input_parameter< const int& >::type k_tot_max(k_tot_maxSEXP);
     Rcpp::traits::input_parameter< const int& >::type k1(k1SEXP);
     Rcpp::traits::input_parameter< const int& >::type k2(k2SEXP);
+    Rcpp::traits::input_parameter< const arma::uword& >::type num_comp(num_compSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type f_ini(f_iniSEXP);
     Rcpp::traits::input_parameter< const bool& >::type passf_ini(passf_iniSEXP);
     Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
     Rcpp::traits::input_parameter< const int& >::type niter_max(niter_maxSEXP);
     Rcpp::traits::input_parameter< const int& >::type method(methodSEXP);
-    rcpp_result_gen = Rcpp::wrap(odpc_priv(Z, k1, k2, f_ini, passf_ini, tol, niter_max, method));
+    rcpp_result_gen = Rcpp::wrap(odpc_priv(Z, resp, k_tot_max, k1, k2, num_comp, f_ini, passf_ini, tol, niter_max, method));
     return rcpp_result_gen;
 END_RCPP
 }
 // roll_odpc
-arma::field<arma::field<arma::mat> > roll_odpc(const arma::field<arma::mat>& data_field, const arma::uword& k, const int& window_size, const double& tol, const int& niter_max, const int& method, const arma::uword& ncores);
-RcppExport SEXP _odpc_roll_odpc(SEXP data_fieldSEXP, SEXP kSEXP, SEXP window_sizeSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP methodSEXP, SEXP ncoresSEXP) {
+arma::field<arma::field<arma::mat> > roll_odpc(const arma::field<arma::mat>& data_field, const arma::field<arma::mat>& response_field, const arma::uword& k, const arma::uword& k_tot_max, const arma::uword& num_comp, const int& window_size, const double& tol, const int& niter_max, const int& method, const arma::uword& ncores);
+RcppExport SEXP _odpc_roll_odpc(SEXP data_fieldSEXP, SEXP response_fieldSEXP, SEXP kSEXP, SEXP k_tot_maxSEXP, SEXP num_compSEXP, SEXP window_sizeSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP methodSEXP, SEXP ncoresSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::field<arma::mat>& >::type data_field(data_fieldSEXP);
+    Rcpp::traits::input_parameter< const arma::field<arma::mat>& >::type response_field(response_fieldSEXP);
     Rcpp::traits::input_parameter< const arma::uword& >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const arma::uword& >::type k_tot_max(k_tot_maxSEXP);
+    Rcpp::traits::input_parameter< const arma::uword& >::type num_comp(num_compSEXP);
     Rcpp::traits::input_parameter< const int& >::type window_size(window_sizeSEXP);
     Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
     Rcpp::traits::input_parameter< const int& >::type niter_max(niter_maxSEXP);
     Rcpp::traits::input_parameter< const int& >::type method(methodSEXP);
     Rcpp::traits::input_parameter< const arma::uword& >::type ncores(ncoresSEXP);
-    rcpp_result_gen = Rcpp::wrap(roll_odpc(data_field, k, window_size, tol, niter_max, method, ncores));
+    rcpp_result_gen = Rcpp::wrap(roll_odpc(data_field, response_field, k, k_tot_max, num_comp, window_size, tol, niter_max, method, ncores));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -97,10 +104,10 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_odpc_getMatrixFore", (DL_FUNC) &_odpc_getMatrixFore, 3},
     {"_odpc_getMatrixFitted", (DL_FUNC) &_odpc_getMatrixFitted, 3},
-    {"_odpc_getFini_forecast", (DL_FUNC) &_odpc_getFini_forecast, 4},
+    {"_odpc_getFini_forecast", (DL_FUNC) &_odpc_getFini_forecast, 5},
     {"_odpc_getMSE", (DL_FUNC) &_odpc_getMSE, 2},
-    {"_odpc_odpc_priv", (DL_FUNC) &_odpc_odpc_priv, 8},
-    {"_odpc_roll_odpc", (DL_FUNC) &_odpc_roll_odpc, 7},
+    {"_odpc_odpc_priv", (DL_FUNC) &_odpc_odpc_priv, 11},
+    {"_odpc_roll_odpc", (DL_FUNC) &_odpc_roll_odpc, 10},
     {NULL, NULL, 0}
 };
 

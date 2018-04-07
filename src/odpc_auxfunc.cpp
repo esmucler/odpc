@@ -41,10 +41,9 @@ arma::mat getMatrixX(const arma::mat & Z, const int & k1){
   return(X);
 }
 
-
 arma::mat getMatrixC_forecast(const arma::mat & Z, const int & k_tot,
                               const int & k1, const int & k2){
-  // Get C = [Zk_tot0; ...; Zk10]
+  // Get C = [Zk_tot;k1 ...; Zktot-k2;k1]
   int N = Z.n_rows;
   int m = Z.n_cols;
   arma::mat C = zeros((N - k_tot) * (k2 + 1), m * (k1 + 1));
@@ -77,7 +76,7 @@ arma::mat getMatrixFitted(const arma::vec & f,
                           const int & k2){
   // Get matrix F whose columns are 1 and f_{j} for j = k_tot, ..., k1
   // used in fitted.odpc
-  int L = f.n_elem; // = T - k1
+  int L = f.n_elem; // = T - (k_tot_max - k2)
   arma::mat outF = zeros(L - k2, k2 + 2);
   for (int i = 0; i <= k2; i++){
     outF.col(i + 1) = f(span(k2 - i, L - 1 - i));
@@ -96,41 +95,63 @@ void getMatrixF(const arma::mat & Z, const int & k1,
   }
 }
 
-void getMatrixD(const arma::mat & Z2k, const arma::mat & F, arma::mat & outD){
+void getMatrixD(const arma::mat & resp, const arma::mat & F, arma::mat & outD){
   // Get matrix D of loadings and intercepts. First row contains the intercepts (alpha)
   // INPUT
-  // Z2k: submatrix of data matrix Z formed by keeping only rows (k1+k2)+1, ..., T
+  // resp: data to be reconstructed
   // F: current matrix of principal components
   // OUTPUT
   // outD: matrix of loadings and intercepts
   double condi = cond(F);
   if (condi < 1e10){
-    outD = solve(F, Z2k);
+    outD = solve(F, resp);
   } else {
-    outD = pinv(F) * Z2k;
+    outD = pinv(F) * resp;
   }
 }
 
 
 // [[Rcpp::export]]
 arma::mat getFini_forecast(const arma::mat & Z,
+                           const arma::mat & resp,
                            const int & k1,
                            const int & k2,
-                           const int & k_tot) {
+                           const arma::uword & num_comp) {
   // Get initial matrix F: built using the ordinary principal component with k_1 lags
+  int L = resp.n_rows; // N - k_tot_max
   int N = Z.n_rows;
-  arma::mat Z_cen = Z;
-  arma::vec f_ini = zeros(N, 1);
-  arma::mat U;
-  arma::vec s;
-  arma::mat V;
-  arma::rowvec mean_Z = mean(Z);
-  Z_cen.each_row() -= mean_Z; 
-  svd_econ(U, s, V, Z_cen, "right");
-  f_ini = Z * V.col(0);
-  arma::mat Fini = zeros(N - k_tot, k2 + 2);
-  for (int h = 0; h <= k2; h++){
-    Fini.col(h + 1) = f_ini(span(k_tot - h, N - h - 1));
+  arma::mat Fini = zeros(L, k2 + 2);
+  // if computing the first component, use the first principal component of the full data
+  if (num_comp==1){
+    int k_tot = k1 + k2;
+    arma::mat Z_cen = Z;
+    arma::vec f_ini = zeros(N, 1);
+    arma::mat U;
+    arma::vec s;
+    arma::mat V;
+    arma::rowvec mean_Z = mean(Z);
+    Z_cen.each_row() -= mean_Z; 
+    svd_econ(U, s, V, Z_cen, "right");
+    f_ini = Z * V.col(0);
+    for (int h = 0; h <= k2; h++){
+      Fini.col(h + 1) = f_ini(span(k_tot - h, N - h - 1));
+    }
+  }
+  // else, use the first principal component of current response;
+  // it has nrow N-k_max, f_ini has N-k_max-k2. Fill the missing k2 entries with zeros
+  if (num_comp > 1){
+    arma::vec f_ini = zeros(L + k2, 1);
+    arma::mat resp_cen = resp;
+    arma::mat U;
+    arma::vec s;
+    arma::mat V;
+    arma::rowvec mean_resp = mean(resp);
+    resp_cen.each_row() -= mean_resp; 
+    svd_econ(U, s, V, resp_cen, "right");
+    f_ini(span(k2, L + k2 - 1)) = resp * V.col(0);
+    for (int h = 0; h <= k2; h++){
+      Fini.col(h + 1) = f_ini(span(k2 - h, L + k2 - h - 1));
+    }
   }
   //First column is filled with ones
   Fini.col(0).fill(1);
@@ -160,7 +181,7 @@ void getVecA(arma::sp_mat & W,
              const arma::mat & B,
              const arma::mat & ident,
              const arma::mat & C,
-             const arma::mat & vecZ2k,
+             const arma::mat & vecresp,
              arma::vec & outA){
   // Get vector a that defines the principal component
   // INPUT
@@ -168,21 +189,21 @@ void getVecA(arma::sp_mat & W,
   // B: current matrix of loadings
   // ident: (T-(k1+k2)) x (T-(k1+k2))  identity matrix
   // C: = [Z(k1+k2)0; ...; Zk10]
-  // vecZ2k: vectorization of Z2k - alphas
+  // vecresp: vectorization of resp - alphas
   // OUTPUT
   // outA: vector a that defines the principal component
   W = kron(B.t(), ident);
   WC = W * C;
   double condi = cond(WC);
   if (condi < 1e10) {
-    outA = solve(WC, vecZ2k);
+    outA = solve(WC, vecresp);
   } else {
-    outA = pinv(WC) * vecZ2k;
+    outA = pinv(WC) * vecresp;
   }
   outA /= norm(outA);
 }
 
-void getVecAMatD(const arma::mat & Z2k,
+void getVecAMatD(const arma::mat & resp,
                  const arma::mat & matF,
                  const arma::mat & ident,
                  const arma::mat & C,
@@ -192,18 +213,18 @@ void getVecAMatD(const arma::mat & Z2k,
                  arma::vec & outalpha,
                  arma::mat & outB,
                  arma::mat & outD,
-                 arma::vec & vecZ2k,
+                 arma::vec & vecresp,
                  arma::sp_mat & W){
   int k = outD.n_rows - 2;
-  getMatrixD(Z2k, matF, outD);
+  getMatrixD(resp, matF, outD);
   outB = outD.rows(1, k + 1);
   outalpha = outD.row(0).t();
-  vecZ2k = vectorise(Z2k) - kron(outalpha, ident) * one;
+  vecresp = vectorise(resp) - kron(outalpha, ident) * one;
   W = kron(outB.t(), ident);
   for (arma::uword iter_a = 0; iter_a < outa.n_rows; iter_a++) {
     outa[iter_a] = 0;
     out_WCres = W * C.col(iter_a);
-    outa[iter_a] = dot(out_WCres, vecZ2k - W * (C * outa) );
+    outa[iter_a] = dot(out_WCres, vecresp - W * (C * outa) );
     outa[iter_a] /=  pow(norm(out_WCres), 2);
   }
   double norma = norm(outa);
@@ -215,17 +236,17 @@ void getVecAMatD(const arma::mat & Z2k,
 
 
 // [[Rcpp::export]]
-double getMSE(const arma::mat & Z2k,
+double getMSE(const arma::mat & resp,
               const arma::mat & Fitted){
-  // Get MSE of the reconstruction of Z2k by Fitted
+  // Get MSE of the reconstruction of resp by Fitted
   // INPUT
-  // Z2k: submatrix of data matrix Z formed by keeping only rows ()k1+k2)+1, ..., T
+  // resp: matrix ot be reconstructed
   // Fitted: matrix of fitted values
   // OUTPUT
   // mse: mean squared error
-  int N = Z2k.n_rows;
-  int m = Z2k.n_cols;
-  double mse = accu(pow(Z2k - Fitted, 2));
+  int N = resp.n_rows;
+  int m = resp.n_cols;
+  double mse = accu(pow(resp - Fitted, 2));
   mse /= (N * m);
   return(mse);
 }
@@ -233,8 +254,11 @@ double getMSE(const arma::mat & Z2k,
 
 // [[Rcpp::export]]
 arma::field<arma::mat> odpc_priv(const arma::mat & Z,
+                                 const arma::mat & resp,
+                                 const int & k_tot_max,
                                   const int & k1,
                                   const int & k2,
+                                  const arma::uword & num_comp,
                                   const arma::vec & f_ini,
                                   const bool & passf_ini,
                                   const double & tol,
@@ -243,8 +267,12 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
   // This function computes a single ODPC with a given number of lags.
   // INPUT
   // Z: data matrix each column is a different time series
+  // resp: series to be reconstructed; if q components have been computed, this will have
+  // N-k_tot_max, where k_tot_max=max(k^i1+k^i2)
   // k1: number of lags used to define f
   // k2: number of lags used to reconstruct
+  // num_comp: what component is this?
+  // k_tot_max: max(k^i1+k^i2)
   // f_ini: initial estimate of f
   // passf_ini: logical: is f_ini being passed?
   // tol: relative precision, stopping criterion
@@ -263,67 +291,64 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
   // criter: last value of 1-mse1/mse0
   int N = Z.n_rows;
   int m = Z.n_cols;
-  int k_tot = k1 + k2;
-  arma::mat ident = eye(N - k_tot, N - k_tot);
-  arma::vec vecZ2k = zeros((N - k_tot) * m, 1); //will store vectorise(Z2k) - alphas
-  arma::vec one = ones(N - k_tot, 1);
+  
+  arma::mat ident = eye(N - k_tot_max, N - k_tot_max);
+  arma::vec vecresp = zeros((N - k_tot_max) * m, 1); //will store vectorise(resp) - alphas
+  arma::vec one = ones(N - k_tot_max, 1);
   arma::vec alpha = zeros(m, 1);
-  arma::mat Z2k = zeros(N - k_tot, m);
-  arma::mat res = zeros(N - k_tot, m);
-  arma::mat C = zeros((N - k_tot) * (k2 + 1), m * (k1 + 1));
+  arma::mat res = zeros(N - k_tot_max, m);
+  arma::mat C = zeros((N - k_tot_max) * (k2 + 1), m * (k1 + 1));
   arma::mat B = zeros(k2 + 1, m);
   arma::mat D = zeros(k2 + 2, m);
-  arma::mat matF = zeros(N - k_tot, k2 + 2);
+  arma::mat matF = zeros(N - k_tot_max, k2 + 2);
   matF.col(0).fill(1); //matF's first column is filled with 0
-  arma::vec fout = zeros(N - k1, 1);
-  arma::mat Fitted = zeros(N - k_tot, m);
-  arma::sp_mat W = sp_mat(m * (N - k_tot), (N - k_tot) * (k2 + 1));
+  arma::vec fout = zeros(N - (k_tot_max - k2), 1);
+  arma::mat Fitted = zeros(N - k_tot_max, m);
+  arma::sp_mat W = sp_mat(m * (N - k_tot_max), (N - k_tot_max) * (k2 + 1));
   arma::vec a = zeros(m * (k1 + 1), 1);
   double mse = 0;
   int niter = 0;
   bool conv = false;
   double criter = tol + 1;
-  Z2k = getMatrixZj(Z, k_tot, k_tot);
-  C = getMatrixC_forecast(Z, k_tot, k1, k2);
-  
+  C = getMatrixC_forecast(Z, k_tot_max, k1, k2);
   // if using ALS method
   if (method == 1){
-    arma::mat WC = zeros(m * (N - k_tot), m * (k2 + 1));
+    arma::mat WC = zeros(m * (N - k_tot_max), m * (k2 + 1));
     // if initial f was passed, get initial a associated with it
     // else use ordinary PC
     if (passf_ini) {
       getVecAini(Z, f_ini, k1, a);
-      getMatrixF(Z, k1, k2, k_tot, a, matF);
-      getMatrixD(Z2k, matF, D);
+      getMatrixF(Z, k1, k2, k_tot_max, a, matF);
+      getMatrixD(resp, matF, D);
       B = D.rows(1, k2 + 1);
       alpha = D.row(0).t();
-      vecZ2k = vectorise(Z2k) - kron(alpha, ident) * one;
+      vecresp = vectorise(resp) - kron(alpha, ident) * one;
     } else {
-      matF = getFini_forecast(Z, k1, k2, k_tot);
-      getMatrixD(Z2k, matF, D);
+      matF = getFini_forecast(Z, resp, k1, k2, num_comp);
+      getMatrixD(resp, matF, D);
       B = D.rows(1, k2 + 1);
       alpha = D.row(0).t();
-      vecZ2k = vectorise(Z2k) - kron(alpha, ident) * one;
-      getVecA(W, WC, B, ident, C, vecZ2k, a);
-      getMatrixF(Z, k1, k2, k_tot, a, matF);
-      getMatrixD(Z2k, matF, D);
+      vecresp = vectorise(resp) - kron(alpha, ident) * one;
+      getVecA(W, WC, B, ident, C, vecresp, a);
+      getMatrixF(Z, k1, k2, k_tot_max, a, matF);
+      getMatrixD(resp, matF, D);
       B = D.rows(1, k2 + 1);
       alpha = D.row(0).t();
-      vecZ2k = vectorise(Z2k) - kron(alpha, ident) * one;
+      vecresp = vectorise(resp) - kron(alpha, ident) * one;
     }
     Fitted = matF * D;
-    mse = getMSE(Z2k, Fitted);
+    mse = getMSE(resp, Fitted);
     double mse_ini = mse;
     while (niter < niter_max and criter > tol){
       niter += 1;
-      getVecA(W, WC, B, ident, C, vecZ2k, a);
-      getMatrixF(Z, k1, k2, k_tot, a, matF);
-      getMatrixD(Z2k, matF, D);
+      getVecA(W, WC, B, ident, C, vecresp, a);
+      getMatrixF(Z, k1, k2, k_tot_max, a, matF);
+      getMatrixD(resp, matF, D);
       B = D.rows(1, k2 + 1);
       alpha = D.row(0).t();
-      vecZ2k = vectorise(Z2k) - kron(alpha, ident) * one;
+      vecresp = vectorise(resp) - kron(alpha, ident) * one;
       Fitted = matF * D;
-      mse = getMSE(Z2k, Fitted);
+      mse = getMSE(resp, Fitted);
       criter = 1 - mse / mse_ini;
       mse_ini = mse;
       // if (niter % 2 == 0){
@@ -332,21 +357,21 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
     }
     // if using mix method
   } else if (method == 2){
-    arma::vec out_WCres = zeros((N - k_tot) * m);
+    arma::vec out_WCres = zeros((N - k_tot_max) * m);
     if (passf_ini) {
       getVecAini(Z, f_ini, k1, a);
-      getMatrixF(Z, k1, k2, k_tot, a, matF);
+      getMatrixF(Z, k1, k2, k_tot_max, a, matF);
     } else {
-      matF = getFini_forecast(Z, k1, k2, k_tot);
+      matF = getFini_forecast(Z, resp, k1, k2, num_comp);
     }
     mse = 1e10;
     double mse_ini = mse;
     while (niter < niter_max and criter > tol){
       niter += 1;
-      getVecAMatD(Z2k, matF, ident, C, one, out_WCres, a, alpha, B, D, vecZ2k, W);
-      getMatrixF(Z, k1, k2, k_tot, a, matF);
+      getVecAMatD(resp, matF, ident, C, one, out_WCres, a, alpha, B, D, vecresp, W);
+      getMatrixF(Z, k1, k2, k_tot_max, a, matF);
       Fitted = matF * D;
-      mse = getMSE(Z2k, Fitted);
+      mse = getMSE(resp, Fitted);
       criter = 1 - mse / mse_ini;
       mse_ini = mse;
       // if (niter % 2 == 0){
@@ -362,12 +387,12 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
 
   if (k2 > 0) {
     fout(span(0, k2 - 1)) = matF(span(0, k2 - 1), k2 + 1);
-    fout(span(k2, N - k1 - 1)) = matF.col(1);
+    fout(span(k2, N - (k_tot_max - k2) - 1)) = matF.col(1);
   } else {
     fout = matF.col(1);
   }
   
-  res = Z2k - Fitted;
+  res = resp - Fitted;
   
   arma::vec k1_vec = zeros(1);
   arma::vec k2_vec = zeros(1);
@@ -397,7 +422,10 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
 
 // [[Rcpp::export]]
 arma::field<arma::field<arma::mat> > roll_odpc(const arma::field<arma::mat> & data_field,
+                                               const arma::field<arma::mat> & response_field,
                                                const arma::uword & k,
+                                               const arma::uword & k_tot_max,
+                                               const arma::uword & num_comp,
                                                const int & window_size,
                                                const double & tol,
                                                const int & niter_max,
@@ -405,8 +433,11 @@ arma::field<arma::field<arma::mat> > roll_odpc(const arma::field<arma::mat> & da
                                                const arma::uword & ncores) {
   // This function computes a ODPC over a rolling window.
   // INPUT
-  // data_field: Field with the data to be used for training (could be residuals from previous fits),
+  // data_field: Field with the data to be used for training
+  // response_field: Field with the data to be reconstructed
   // k: value of k to use (k1==k2)
+  // k_tot_max: current max value of k1+k2
+  // num_comp : what component is this?
   // window_size: the size of the window
   // tol: relative precision, stopping criterion
   // niter_max: maximum number of iterations
@@ -417,7 +448,8 @@ arma::field<arma::field<arma::mat> > roll_odpc(const arma::field<arma::mat> & da
   arma::field<arma::field<arma::mat> >  output(window_size, 1);
   # pragma omp parallel for num_threads(ncores)
   for (int ind=0; ind < window_size; ind++){
-    output(ind, 0) = odpc_priv(data_field(ind, 0), k, k, nothing, false, tol, niter_max, method);
+    output(ind, 0) = odpc_priv(data_field(ind, 0), response_field(ind, 0), k_tot_max, k, k,
+                               num_comp, nothing, false, tol, niter_max, method);
   }
   # pragma omp barrier
   return(output);

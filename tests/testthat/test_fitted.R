@@ -22,8 +22,10 @@ for (i in 1:m) {
   x_large[, i] <- 10 * sin(2 * pi * (i/m)) * f[1:N] + 10 * cos(2 * pi * (i/m)) * f[2:(N + 1)] + u[, i]
 }
 ks <- matrix(c(1, 2, 3, 1), nrow=2, ncol=2)
-ind_recons1 <- ks[1, 1] + ks[1, 2] + 1
-ind_recons2 <- ind_recons1 + ks[2, 1] + ks[2, 2]
+k_tot_1 <- ks[1, 1] + ks[1, 2]
+ind_recons1 <- k_tot_1 + 1
+k_tot_2 <- ks[2, 1] + ks[2, 2]
+ind_recons2 <- max(k_tot_1, k_tot_2) + 1
 
 
 fit_small <- odpc(x_small, ks=ks, tol=1e-2)

@@ -164,13 +164,19 @@ fitted.odpcs <- function(object, num_comp = 1, ...) {
     stop("num_comp should be a positive integer, at most equal to the number of components")
   }
   object <- object[1:num_comp]
-  Nmin <- length(object[[num_comp]]$f) - object[[num_comp]]$k2
+  # Nmin <- length(object[[num_comp]]$f) - object[[num_comp]]$k2
+  N <- length(object[[1]]$f) + object[[1]]$k1
+  k1s <- sapply(object, function(comp){comp$k1})
+  k2s <- sapply(object, function(comp){comp$k2})
+  k_tots <- k1s + k2s
+  k_max <- max(k_tots)
+  Nmin <- N - k_max
   fits <- 0
   aux <- 0
   for (i in 1:length(object)){
     aux <- fitted(object[[i]])
-    N <- nrow(aux)
-    fits <- fits + aux[(1 + N - Nmin):N,]
+    N_aux <- nrow(aux)
+    fits <- fits + aux[(1 + N_aux - Nmin):N_aux,]
   }
   colnames(fits) <- colnames(object[[1]]$B)
   return(fits)
@@ -203,7 +209,8 @@ forecast.odpcs <- function(object, h, Z = NULL, add_residuals = FALSE, ...){
     k1s <- sapply(object, function(x) { return(x$k1) })
     k2s <- sapply(object, function(x) { return(x$k2) })
     k_tot <- sum(k1s + k2s)
-    residuals <- Z[(k_tot + 1):nrow(Z), ] - fitted(object, num_comp = length(object))
+    k_max <- max(k_tot)
+    residuals <- Z[(k_max + 1):nrow(Z), ] - fitted(object, num_comp = length(object))
     fore_res <- apply(residuals, 2, function(x, h, ...){ 
       auto <- auto.arima(x, ...)
       return(forecast(auto, h)$mean)
@@ -255,6 +262,11 @@ build_data_field <- function(object=NULL, Z=NULL, window_size=NULL, h=NULL){
     data_field <- lapply(object, function(fit) { fit[[num_comp]]$res })
   }
   return(data_field)
+}
+
+build_response_field <- function(data_field, k_trun){
+  response_field <- lapply(k_trun, function(k){ lapply(data_field, function(data) { data[(k + 1):nrow(data),] })})
+  return(response_field)
 }
 
 get_best_fit <- function(object, Z, h, window_size, ...){
@@ -320,18 +332,28 @@ convert_rename_comp <- function(comp, wrap=TRUE){
   return(new_comp)
 }
 
-get_best_fit_crit <- function(object, Z, num_comp){
-  crits <- sapply(object, function(comp){ get_crit(comp=comp, Z=Z, num_comp)})
+get_best_fit_crit <- function(object, num_comp){
+  crits <- sapply(object, function(comp){ get_crit(comp=comp, num_comp)})
   ind_opt <- which.min(crits)
   opt_comp <- object[[ind_opt]]
   opt_crit <- min(crits)
   return(list(opt_comp=opt_comp, opt_crit = opt_crit, opt_ind = ind_opt))
 }
 
-get_crit <- function(comp, Z, num_comp){
-  m <- ncol(Z)
+get_crit <- function(comp, num_comp){
+  m <- ncol(comp[[1]]$res)
   T_c <- nrow(comp[[1]]$res)
   mse <- comp[[1]]$mse
   k <- comp[[1]]$k1
   crit <- T_c * log(mse) +  num_comp * (k + 1) * log(min(T_c, m)) 
+}
+
+update_k_params <- function(ks, k_list){
+  current_max_k <- max(ks)
+  k_maxs <- sapply(k_list, function(k) { max(2 * k, 2 * current_max_k) })
+  k_trun <- rep(0, length(k_list))
+  ind_trun <- which(k_list > current_max_k)
+  k_trun[ind_trun] <- 2 * (k_list[ind_trun] - current_max_k)
+  out <- list(k_trun=k_trun, current_max_k=current_max_k, k_maxs=k_maxs)
+  return(out)
 }

@@ -9,19 +9,19 @@ getMatrixFitted <- function(f, k1, k2) {
     .Call(`_odpc_getMatrixFitted`, f, k1, k2)
 }
 
-getFini_forecast <- function(Z, k1, k2, k_tot) {
-    .Call(`_odpc_getFini_forecast`, Z, k1, k2, k_tot)
+getFini_forecast <- function(Z, resp, k1, k2, num_comp) {
+    .Call(`_odpc_getFini_forecast`, Z, resp, k1, k2, num_comp)
 }
 
-getMSE <- function(Z2k, Fitted) {
-    .Call(`_odpc_getMSE`, Z2k, Fitted)
+getMSE <- function(resp, Fitted) {
+    .Call(`_odpc_getMSE`, resp, Fitted)
 }
 
-odpc_priv <- function(Z, k1, k2, f_ini, passf_ini, tol, niter_max, method) {
-    .Call(`_odpc_odpc_priv`, Z, k1, k2, f_ini, passf_ini, tol, niter_max, method)
+odpc_priv <- function(Z, resp, k_tot_max, k1, k2, num_comp, f_ini, passf_ini, tol, niter_max, method) {
+    .Call(`_odpc_odpc_priv`, Z, resp, k_tot_max, k1, k2, num_comp, f_ini, passf_ini, tol, niter_max, method)
 }
 
-roll_odpc <- function(data_field, k, window_size, tol, niter_max, method, ncores) {
-    .Call(`_odpc_roll_odpc`, data_field, k, window_size, tol, niter_max, method, ncores)
+roll_odpc <- function(data_field, response_field, k, k_tot_max, num_comp, window_size, tol, niter_max, method, ncores) {
+    .Call(`_odpc_roll_odpc`, data_field, response_field, k, k_tot_max, num_comp, window_size, tol, niter_max, method, ncores)
 }
 

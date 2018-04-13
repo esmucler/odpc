@@ -11,13 +11,6 @@ arma::mat getMatrixZj(const arma::mat & Z, const int & k_tot, const int & j){
   return(Zj);
 }
 
-arma::mat getMatrixXj(const arma::mat & Z, const int & k1, const int & j){
-  // Get submatrix Xj made up of rows j+1 to T-k1+j of Z
-  int N = Z.n_rows;
-  arma::mat Xj = Z.rows(j, N - k1 + j - 1);
-  return(Xj);
-}
-
 arma::mat getMatrixZj0(const arma::mat & Z, const int & k1,
                        const int & k_tot, const int & j){
   // Get Zj0 = (Zj, ..., Zj-k1)
@@ -28,17 +21,6 @@ arma::mat getMatrixZj0(const arma::mat & Z, const int & k1,
     Zj0.cols(h * m , (h + 1) * m - 1) = getMatrixZj(Z, k_tot, j - h);
   }
   return(Zj0);
-}
-
-arma::mat getMatrixX(const arma::mat & Z, const int & k1){
-  // Get X = (Xk1+1, ..., X1)
-  int N = Z.n_rows;
-  int m = Z.n_cols;
-  arma::mat X = zeros(N - k1, m * (k1 + 1));
-  for (int h = 0 ; h <= k1; h++) {
-    X.cols(h * m , (h + 1) * m - 1) = getMatrixXj(Z, k1, k1 - h);
-  }
-  return(X);
 }
 
 arma::mat getMatrixC_forecast(const arma::mat & Z, const int & k_tot,
@@ -157,24 +139,6 @@ arma::mat getFini_forecast(const arma::mat & Z,
   Fini.col(0).fill(1);
   return(Fini);
 }
-
-void getVecAini(const arma::mat Z,
-                const arma::vec f_ini,
-                const int & k1,
-                arma::vec & outA){
-  int N = Z.n_rows;
-  int m = Z.n_cols;
-  arma::mat X = zeros(N - k1, m * (k1 + 1));
-  X = getMatrixX(Z, k1);
-  double condi = cond(X);
-  if (condi < 1e10) {
-    outA = solve(X, f_ini);
-  } else {
-    outA = pinv(X) * f_ini;
-  }
-  outA /= norm(outA);
-}
-
 
 void getVecA(arma::sp_mat & W,
              arma::mat & WC,
@@ -314,28 +278,17 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
   // if using ALS method
   if (method == 1){
     arma::mat WC = zeros(m * (N - k_tot_max), m * (k2 + 1));
-    // if initial f was passed, get initial a associated with it
-    // else use ordinary PC
-    if (passf_ini) {
-      getVecAini(Z, f_ini, k1, a);
-      getMatrixF(Z, k1, k2, k_tot_max, a, matF);
-      getMatrixD(resp, matF, D);
-      B = D.rows(1, k2 + 1);
-      alpha = D.row(0).t();
-      vecresp = vectorise(resp) - kron(alpha, ident) * one;
-    } else {
-      matF = getFini_forecast(Z, resp, k1, k2, num_comp);
-      getMatrixD(resp, matF, D);
-      B = D.rows(1, k2 + 1);
-      alpha = D.row(0).t();
-      vecresp = vectorise(resp) - kron(alpha, ident) * one;
-      getVecA(W, WC, B, ident, C, vecresp, a);
-      getMatrixF(Z, k1, k2, k_tot_max, a, matF);
-      getMatrixD(resp, matF, D);
-      B = D.rows(1, k2 + 1);
-      alpha = D.row(0).t();
-      vecresp = vectorise(resp) - kron(alpha, ident) * one;
-    }
+    matF = getFini_forecast(Z, resp, k1, k2, num_comp);
+    getMatrixD(resp, matF, D);
+    B = D.rows(1, k2 + 1);
+    alpha = D.row(0).t();
+    vecresp = vectorise(resp) - kron(alpha, ident) * one;
+    getVecA(W, WC, B, ident, C, vecresp, a);
+    getMatrixF(Z, k1, k2, k_tot_max, a, matF);
+    getMatrixD(resp, matF, D);
+    B = D.rows(1, k2 + 1);
+    alpha = D.row(0).t();
+    vecresp = vectorise(resp) - kron(alpha, ident) * one;
     Fitted = matF * D;
     mse = getMSE(resp, Fitted);
     double mse_ini = mse;
@@ -358,12 +311,7 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
     // if using mix method
   } else if (method == 2){
     arma::vec out_WCres = zeros((N - k_tot_max) * m);
-    if (passf_ini) {
-      getVecAini(Z, f_ini, k1, a);
-      getMatrixF(Z, k1, k2, k_tot_max, a, matF);
-    } else {
-      matF = getFini_forecast(Z, resp, k1, k2, num_comp);
-    }
+    matF = getFini_forecast(Z, resp, k1, k2, num_comp);
     mse = 1e10;
     double mse_ini = mse;
     while (niter < niter_max and criter > tol){

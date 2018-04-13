@@ -6,12 +6,11 @@ Computes One-Sided Dynamic Principal Components for a given number of lags.
 }
 
 
-\usage{odpc(Z, ks, method, ini = 'classic', tol = 1e-04, niter_max = 500)}
+\usage{odpc(Z, ks, method, tol = 1e-04, niter_max = 500)}
 \arguments{
   \item{Z}{Data matrix. Each column is a different time series.}
   \item{ks}{Matrix or vector of integers. If a matrix, each row is the vector with number of lags to use for each              component. First column has the number of lags used to define the dynamic principal component (\eqn{k_1}), second column has the number of lags of the dynamic principal component used to reconstruct the series (\eqn{k_2}). If a vector, its entries are taken as both \eqn{k_1} and \eqn{k_2}             for each component}
   \item{method}{A string specifying the algorithm used. Options are 'ALS' or 'mix'. See details below.}
-  \item{ini}{A string specifying the initial estimator to be used, either 'classic' or 'gdpc'. Default is 'classic'. See details below.}
   \item{tol}{Relative precision. Default is 1e-4.}
   \item{niter_max}{Integer. Maximum number of iterations. Default is 500.}
 }
@@ -61,8 +60,6 @@ The second one-sided dynamic principal component is defined similarly, but now t
 residuals of the first one-sided dynamic principal component are to be reconstructed.
 
 If method = 'ALS', an Alternating Least Squares type algorithm is used to compute the solution. If 'mix' is chosen, in each iteration Least Squares is used to compute the matrix of loadings and intercepts, but one iteration of Coordinate Descent is performed to compute the vector a that defines the dynamic principal component. By default, 'ALS' is used when the number of series is less than 40, else 'mix' is used.
-
-If ini = 'classic', the ordinary (non-dynamic) principal components of the data are used as a starting point of the iterations. If ini = 'gdpc', the generalized dynamic principal components are used.
 }
 
 \value{
@@ -87,7 +84,7 @@ Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series 
 }
 
 \seealso{
-\code{\link{plot.odpc}}, \code{\link{fitted.odpcs}}, \code{\link{components.odpcs}}, \code{\link{forecast.odpcs}}, \code{\link[gdpc]{gdpc}}, \code{\link[gdpc]{gdpc}}
+\code{\link{plot.odpc}}, \code{\link{fitted.odpcs}}, \code{\link{components.odpcs}}, \code{\link{forecast.odpcs}}
 }
 \examples{
 T <- 200 #length of series
@@ -101,7 +98,5 @@ for (i in 1:m) {
 }
 fit <- odpc(x, ks = c(1))
 fit
-fit2 <- odpc(x, ks = c(1), ini = 'gdpc')
-fit2
 }
 \keyword{ts}

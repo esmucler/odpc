@@ -1,4 +1,4 @@
-odpc <- function(Z, ks, method, ini = 'classic', tol = 1e-04, niter_max = 500) {
+odpc <- function(Z, ks, method, tol = 1e-04, niter_max = 500) {
   # Computes One Sided Dynamic Principal Components.
   #INPUT
   # Z: data matrix, series by columns 
@@ -8,7 +8,6 @@ odpc <- function(Z, ks, method, ini = 'classic', tol = 1e-04, niter_max = 500) {
   # component used to reconstruct the series (k2). If ks is a vector, its i-th entry 
   # is taken as both k1 and k2 for the i-th component
   # method: Algorithm used. Options are 'ALS' or 'mix'. See details below.
-  # ini: initial estimator for the iterations. Either 'classic' or 'gdpc'. Default is 'classic'.
   # niter_max : maximum number of iterations. Default is 500
   # tol : tolerance parameter to declare convergence. Default is 1e-4
   
@@ -77,45 +76,25 @@ odpc <- function(Z, ks, method, ini = 'classic', tol = 1e-04, niter_max = 500) {
   k_tot_max_old <- cum_k_tot_max[1] #current max
   res <- Z[((k_tot_max_old)+1):nrow(Z),]  #residuals for the null model
   
-  if (ini == 'classic'){
-    for (iter in seq_len(num_comp)){
-      k_tot_max <- cum_k_tot_max[iter]
-      # if the max at this iter is larger than the current max
-      # we have to lose the difference in periods; else the 
-      # reconstructible periods remain the same
-      if (k_tot_max > k_tot_max_old){
-        resp <- res[((k_tot_max - k_tot_max_old) + 1):nrow(res),]  #current response
-        k_tot_max_old <- k_tot_max
-      } else {
-        resp <- res #current response
-      }
-      output[[iter]] <- convert_rename_comp(odpc_priv(Z = Z, resp=resp, k_tot_max=k_tot_max,
-                                                      k1 = ks[iter, 1], k2 = ks[iter, 2], num_comp=iter, f_ini = 0,
-                                                      passf_ini = FALSE, tol = tol, niter_max = niter_max, method = method),
-                                            wrap=FALSE)
-      res <- output[[iter]]$res #current residuals
+  
+  for (iter in seq_len(num_comp)){
+    k_tot_max <- cum_k_tot_max[iter]
+    # if the max at this iter is larger than the current max
+    # we have to lose the difference in periods; else the 
+    # reconstructible periods remain the same
+    if (k_tot_max > k_tot_max_old){
+      resp <- res[((k_tot_max - k_tot_max_old) + 1):nrow(res),]  #current response
+      k_tot_max_old <- k_tot_max
+    } else {
+      resp <- res #current response
     }
-  } else if (ini == 'gdpc'){
-    for (iter in seq_len(num_comp)){
-      k_tot_max <- cum_k_tot_max[iter]
-      # if the max at this iter is larger than the current max
-      # we have to lose the difference in periods; else the 
-      # reconstructible periods remain the same
-      if (k_tot_max > k_tot_max_old){
-        resp <- res[((k_tot_max - k_tot_max_old) + 1):nrow(res),]  #current response
-        k_tot_max_old <- k_tot_max
-      } else {
-        resp <- res #current response
-      }
-      fit_gdpc <- gdpc(Z = resp, k = ks[iter, 1], tol = tol, niter_max = niter_max)
-      f_ini <- fit_gdpc$f[(k_tot_max - ks[iter, 2] + 1):length(fit_gdpc$f)]
-      output[[iter]] <- convert_rename_comp(odpc_priv(Z = Z, resp=resp, k_tot_max=k_tot_max,
-                                                      k1 = ks[iter, 1], k2 = ks[iter, 2], num_comp=iter, f_ini = f_ini,
-                                                      passf_ini = TRUE, tol = tol, niter_max = niter_max, method = method),
-                                            wrap=FALSE)
-      res <- output[[iter]]$res #current residuals
-    }
+    output[[iter]] <- convert_rename_comp(odpc_priv(Z = Z, resp=resp, k_tot_max=k_tot_max,
+                                                    k1 = ks[iter, 1], k2 = ks[iter, 2], num_comp=iter, f_ini = 0,
+                                                    passf_ini = FALSE, tol = tol, niter_max = niter_max, method = method),
+                                          wrap=FALSE)
+    res <- output[[iter]]$res #current residuals
   }
+  
   criters_conv <- sapply(output, function(x) { return(x$criter) })
   if (any(criters_conv < -1e-5)){
     warning('The last iteration did not decrease the reconstruction MSE')
@@ -246,7 +225,7 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=
   }
   methods <- c('ALS', 'mix')
   method <- methods[method]
-  output <- odpc(Z=Z, ks=as.numeric(ks), method=method, ini = "classic", tol=tol, niter_max=niter_max)
+  output <- odpc(Z=Z, ks=as.numeric(ks), method=method, tol=tol, niter_max=niter_max)
   on.exit(stopCluster(cl))
   return(output)
 }

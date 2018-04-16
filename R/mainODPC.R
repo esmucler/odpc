@@ -215,6 +215,7 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=
       new_best_mse <- best_fit$opt_mse
       new_opt_k <- k_list[best_fit$opt_ind]
       ks <- c(ks, new_opt_k)
+      num_comp <- length(ks)
       updated_k_params <- update_k_params(ks=ks, k_list=k_list)
       k_maxs <- updated_k_params$k_maxs
       k_trun <- updated_k_params$k_trun

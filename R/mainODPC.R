@@ -309,7 +309,7 @@ crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores, method, tol = 1
   response_field <- lapply(k_trun, function(k){ Z[(k+1):nrow(Z),]  })
   fits <- grid_crit_odpc(Z = Z, response_field = response_field, k_maxs = 2 * k_list, num_comp = num_comp,
                          k_list=k_list, tol=tol, niter_max=niter_max, method=method)
-  best_fit <- get_best_fit_crit(fits, num_comp=1)
+  best_fit <- get_best_fit_crit(fits, k_acum = 0)
   opt_comp <- best_fit$opt_comp
   new_best_crit <- best_fit$opt_crit
   new_opt_k <- k_list[best_fit$opt_ind]
@@ -330,7 +330,7 @@ crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores, method, tol = 1
     
     
     # get the optimal k for the new component
-    best_fit <- get_best_fit_crit(fits, num_comp=num_comp + 1)
+    best_fit <- get_best_fit_crit(fits, k_acum = sum(ks + 1))
     
     cand_opt_comp <- best_fit$opt_comp
     

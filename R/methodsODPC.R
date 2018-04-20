@@ -332,20 +332,20 @@ convert_rename_comp <- function(comp, wrap=TRUE){
   return(new_comp)
 }
 
-get_best_fit_crit <- function(object, num_comp){
-  crits <- sapply(object, function(comp){ get_crit(comp=comp, num_comp)})
+get_best_fit_crit <- function(object, k_acum){
+  crits <- sapply(object, function(comp){ get_crit(comp=comp, k_acum)})
   ind_opt <- which.min(crits)
   opt_comp <- object[[ind_opt]]
   opt_crit <- min(crits)
   return(list(opt_comp=opt_comp, opt_crit = opt_crit, opt_ind = ind_opt))
 }
 
-get_crit <- function(comp, num_comp){
+get_crit <- function(comp, k_acum){
   m <- ncol(comp[[1]]$res)
   T_c <- nrow(comp[[1]]$res)
   mse <- comp[[1]]$mse
   k <- comp[[1]]$k1
-  crit <- T_c * log(mse) +  num_comp * (k + 1) * log(min(T_c, m)) 
+  crit <- T_c * log(mse) +   (k_acum + k + 1) * log(min(T_c, m)) 
 }
 
 update_k_params <- function(ks, k_list){

@@ -345,7 +345,7 @@ get_crit <- function(comp, k_acum){
   T_c <- nrow(comp[[1]]$res)
   mse <- comp[[1]]$mse
   k <- comp[[1]]$k1
-  crit <- T_c * log(mse) +   (k_acum + k + 1) * log(min(T_c, m)) 
+  crit <- T_c * log(mse) + ( (T_c + m) / (m * T_c) ) * (k_acum + k + 1) * log(min(T_c, m)) 
 }
 
 update_k_params <- function(ks, k_list){

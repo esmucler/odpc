@@ -17,11 +17,6 @@ Plots an \code{odpc} object.
 }
 
 
-\author{
-Daniel Peña, Ezequiel Smucler, Victor Yohai
-}
-
-
 
 \seealso{
 \code{\link{odpc}}

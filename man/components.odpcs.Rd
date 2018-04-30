@@ -16,14 +16,10 @@ Get One-Sided Dynamic Principal Components from an \code{odpcs} object.
 
 
 \value{A list whose entries are the desired dynamic principal components.}
-\author{
-Daniel Peña, Ezequiel Smucler, Victor Yohai
-}
-
 
 
 \seealso{
-\code{\link{odpc}}, \code{\link{forecast.odpcs}}
+\code{\link{odpc}}, \code{\link{crit.odpc}}, \code{\link{cv.odpc}}
 }
 
 \examples{

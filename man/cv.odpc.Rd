@@ -2,7 +2,7 @@
 % Please edit documentation in R/mainODPC.R
 \name{cv.odpc}
 \alias{cv.odpc}
-\title{Automatic choosing of tuning parameters for odpc via cross-validation}
+\title{Automatic Choice of Tuning Parameters for One-Sided Dynamic Principal Components via Cross-Validation}
 \usage{
 cv.odpc(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k = 1,
   ncores_w = 1, method, tol = 1e-04, niter_max = 500, train_tol = 0.01,
@@ -15,15 +15,15 @@ cv.odpc(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k = 1,
 
 \item{k_list}{List of values of k to choose from.}
 
-\item{max_num_comp}{Maximum possible number of components to compute}
+\item{max_num_comp}{Maximum possible number of components to compute.}
 
 \item{window_size}{The size of the rolling window used to estimate the forecasting error.}
 
-\item{ncores_k}{Number of cores to parallelise over the list of ks.}
+\item{ncores_k}{Number of cores to parallelise over \code{k_list}.}
 
-\item{ncores_w}{Number of cores to parallelise over the rolling window (nested in the ks).}
+\item{ncores_w}{Number of cores to parallelise over the rolling window (nested in \code{k_list}).}
 
-\item{method}{A string specifying the algorithm used. Options are 'ALS' or 'mix'. See details below.}
+\item{method}{A string specifying the algorithm used. Options are 'ALS' or 'mix'. See details in \code{\link{odpc}}.}
 
 \item{tol}{Relative precision. Default is 1e-4.}
 
@@ -34,12 +34,69 @@ cv.odpc(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k = 1,
 \item{train_niter_max}{Integer. Maximum number of iterations used in cross-validation. Default is 100.}
 }
 \value{
-An object of class odpcs, that is, a list of length equal to the number of computed components, each computed using the optimal value of k.
+An object of class odpcs, that is, a list of length equal to the number of computed components, each computed using the optimal value of k. 
+The i-th entry of this list is an object of class \code{odpc}, that is, a list with entries
+\item{f}{Coordinates of the i-th dynamic principal component corresponding to the periods \eqn{k_1 + 1,\dots,T}.}
+\item{mse}{Mean squared error of the reconstruction using the first i components.}
+\item{k1}{Number of lags used to define the i-th dynamic principal component f.}
+\item{k2}{Number of lags of f used to reconstruct.}
+\item{alpha}{Vector of intercepts corresponding to f.}
+\item{a}{Vector that defines the i-th dynamic principal component}
+\item{B}{Matrix of loadings corresponding to f. Row number \eqn{k} is the vector of \eqn{k-1} lag loadings.}
+\item{call}{The matched call.}
+\item{conv}{Logical. Did the iterations converge?}
+\code{components}, \code{fitted}, \code{plot} and \code{print} methods are available for this class.
 }
 \description{
 Computes One-Sided Dynamic Principal Components, choosing the number of components and lags automatically, to minimize an estimate
 of the forecasting mean squared error.
 }
+\details{
+We assume that for each component
+\eqn{k_{1}^{i}=k_{2}^{i}}, that is, the number of lags of \eqn{\mathbf{z}_{t}} used to
+define the dynamic principal component and the number of lags of
+\eqn{\widehat{f}^{i}_{t}} used to reconstruct the original series are the same. The number of components and lags
+is chosen to minimize the cross-validated forecasting error in a
+stepwise fashion.  
+Suppose we want to make \eqn{h}-steps ahead forecasts.
+Let \eqn{w=} \code{window_size}.
+Then given \eqn{k\in} \code{k_list} we compute the first ODPC
+defined using \eqn{k} lags, using periods \eqn{1,\dots,T-h-t+1} for \eqn{t=1,\dots,w}, and for each
+of these fits we compute an h-steps ahead forecast and the corresponding
+mean squared error \eqn{E_{t,h}}. The cross-validation estimate of the forecasting error
+is then
+\deqn{
+ \widehat{MSE}_{1,k}=\frac{1}{w}\sum\limits_{t=1}^{w}E_{t,h}.
+}
+ We choose for the first component the value \eqn{k^{\ast,1}} that minimizes \eqn{\widehat{MSE}_{1,k}}.
+Then, we fix the first component computed with \eqn{k^{\ast,1}} lags and repeat the
+procedure with the second component. If the optimal cross-validated
+forecasting error using the two components, \eqn{\widehat{MSE}_{2,k^{\ast,2}}} is larger than the one using only
+one component, \eqn{\widehat{MSE}_{1,k^{\ast,1}}}, we stop and output as a final model the ODPC computed using one component
+defined with \eqn{k^{\ast,1}} lags; otherwise, if \code{max_num_comp} \eqn{\geq 2} we add the second component defined using \eqn{k^{\ast,2}} lags and proceed as before.
+
+This method can be computationally costly, especially for large values of  the \code{window_size}. Ideally, the user should set
+\code{n_cores_k} equal to the length of \code{k_list} and \code{n_cores_w} equal to \code{window_size}; this would entail using
+\code{n_cores_k} times \code{n_cores_w} cores in total.
+}
+\examples{
+T <- 50 #length of series
+m <- 10 #number of series
+set.seed(1234)
+f <- rnorm(T + 1)
+x <- matrix(0, T, m)
+u <- matrix(rnorm(T * m), T, m)
+for (i in 1:m) {
+  x[, i] <- 10 * sin(2 * pi * (i/m)) * f[1:T] + 10 * cos(2 * pi * (i/m)) * f[2:(T + 1)] + u[, i]
+}
+# Choose parameters to perform a one step ahead forecast. Use 1 or 2 lags, only one component 
+# and a window size of 2 (artificially small to keep computation time low). Use two cores for the
+# loop over k, two cores for the loop over the window
+fit <- cv.odpc(x, h=1, k_list = 1:2, max_num_comp = 1, window_size = 2, ncores_k = 2, ncores_w = 2)
+}
+\references{
+Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Available at https://arxiv.org/abs/1708.04705.
+}
 \seealso{
-\code{\link{odpc}}, \code{\link{forecast.odpcs}}
+\code{\link{odpc}}, \code{\link{crit.odpc}}, \code{\link{forecast.odpcs}}
 }

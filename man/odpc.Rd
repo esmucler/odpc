@@ -75,16 +75,13 @@ If method = 'ALS', an Alternating Least Squares type algorithm is used to comput
       \item{conv}{Logical. Did the iterations converge?}
   \code{components}, \code{fitted}, \code{plot} and \code{print} methods are available for this class.
 }
-\author{
-  Daniel Peña, Ezequiel Smucler, Victor Yohai
-}
 
 \references{
 Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Available at https://arxiv.org/abs/1708.04705.
 }
 
 \seealso{
-\code{\link{plot.odpc}}, \code{\link{fitted.odpcs}}, \code{\link{components.odpcs}}, \code{\link{forecast.odpcs}}
+\code{\link{crit.odpc}}, \code{\link{cv.odpc}}, \code{\link{plot.odpc}}, \code{\link{fitted.odpcs}}, \code{\link{components.odpcs}}, \code{\link{forecast.odpcs}}
 }
 \examples{
 T <- 200 #length of series

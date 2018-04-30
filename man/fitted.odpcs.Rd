@@ -17,14 +17,10 @@
 
 
 \value{A matrix that is the reconstruction of the original series.}
-\author{
-  Daniel Peña, Ezequiel Smucler, Victor Yohai
-}
-
 
 
 \seealso{
-  \code{\link{odpc}}
+  \code{\link{odpc}}, \code{\link{crit.odpc}}, \code{\link{cv.odpc}}
 }
 
 \examples{

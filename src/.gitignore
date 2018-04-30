@@ -1,2 +1,4 @@
 registerDynamicSymbols.c~
 .DS_Store
+Makevars
+autoconfig.h

@@ -41,15 +41,11 @@ forecasts are added to the forecasts described above.
 }
 
 
-\value{ A matrix that is the h-step ahead forecast of the original series.}
-\author{
-  Daniel Peña, Ezequiel Smucler, Victor Yohai
-}
-
+\value{ A matrix that is the h-steps ahead forecast of the original series.}
 
 
 \seealso{
-  \code{\link{odpc}}, \code{\link{components.odpcs}}, \code{\link{fitted.odpcs}}, \code{\link[forecast]{auto.arima}}, \code{\link[forecast]{forecast.Arima}}
+  \code{\link{odpc}}, \code{\link{crit.odpc}}, \code{\link{cv.odpc}}, \code{\link{components.odpcs}}, \code{\link[forecast]{auto.arima}}, \code{\link[forecast]{forecast.Arima}}
 }
 
 \examples{

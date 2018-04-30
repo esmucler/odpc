@@ -6,3 +6,5 @@ gdpc.Rproj
 *.o
 .RData
 odpc.Rproj
+config.status
+config.log

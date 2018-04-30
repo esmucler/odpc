@@ -1,8 +1,8 @@
 Package: odpc
 Type: Package
 Title: One-Sided Dynamic Principal Components
-Version: 1.0.0
-Date: 2017-08-17
+Version: 1.9.9007
+Date: 2018-04-30
 Author: Daniel Peña <daniel.pena@uc3m.es>,
     Ezequiel Smucler <ezequiels.90@gmail.com>,
     Victor Yohai <vyohai@dm.uba.ar>
@@ -15,9 +15,12 @@ Description: Functions to compute the one-sided dynamic
 	the linear combinations of the present and past values of the series
 	that minimize the reconstruction mean squared error.
 License: GPL (>= 2)
-Imports: methods, Rcpp (>= 0.12.7), gdpc, forecast
+Biarch: true
+Imports: methods, Rcpp (>= 0.12.7), forecast, parallel, doParallel, foreach
 LinkingTo: Rcpp, RcppArmadillo (>= 0.7.500.0.0)
+Suggests: testthat
 Depends:
-    R (>= 3.3.1)
+    R (>= 3.3.0)
 NeedsCompilation: yes
 Encoding: UTF-8
+RoxygenNote: 6.0.1

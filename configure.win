@@ -1,0 +1,1 @@
+cp src/autoconfig.win.h src/autoconfig.h

@@ -3,6 +3,7 @@ odpc 2.0.0
 
 * The higher order ODPC are now defined as linear combinations of the observations (instead of linear combinations of the residuals of the previous fits). This way
 a smaller number of observations is lost when new components are added. The forecasting performance of the new definition is very similar to that of the old one.
+* Option to use gdpc as starting point for the iterations is no longer supported (for now).
 * Added functions to automate the choice of the tuning parameters for odpc: cv.odpc is based on minimizing the cross-validated forecasting error, crit.odpc
 is based on minimizing and information criterion.
 * Added several tests.

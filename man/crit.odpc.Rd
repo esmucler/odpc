@@ -81,7 +81,7 @@ for (i in 1:m) {
 fit <- crit.odpc(x, k_list = 1:2, max_num_comp = 1)
 }
 \references{
-Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Available at https://arxiv.org/abs/1708.04705.
+Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Journal of the American Statistical Association. To appear.
 
 Bai J. and Ng S. (2002). “Determining the Number of Factors in Approximate Factor Models.” Econometrica, 70(1), 191–221.
 }

@@ -77,7 +77,7 @@ If method = 'ALS', an Alternating Least Squares type algorithm is used to comput
 }
 
 \references{
-Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Journal of the American Statistical Association. To appear.
+Peña D., Smucler E. and Yohai V.J. (2018). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Journal of the American Statistical Association. To appear.
 }
 
 \seealso{

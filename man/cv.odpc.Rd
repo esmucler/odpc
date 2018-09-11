@@ -95,7 +95,7 @@ for (i in 1:m) {
 fit <- cv.odpc(x, h=1, k_list = 1:2, max_num_comp = 1, window_size = 2, ncores_k = 2, ncores_w = 2)
 }
 \references{
-Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Journal of the American Statistical Association. To appear.
+Peña D., Smucler E. and Yohai V.J. (2018). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Journal of the American Statistical Association. To appear.
 }
 \seealso{
 \code{\link{odpc}}, \code{\link{crit.odpc}}, \code{\link{forecast.odpcs}}

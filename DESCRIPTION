@@ -2,14 +2,14 @@ Package: odpc
 Type: Package
 Title: One-Sided Dynamic Principal Components
 Version: 2.0.0
-Date: 2018-09-03
+Date: 2018-09-11
 Author: Daniel Peña <daniel.pena@uc3m.es>,
     Ezequiel Smucler <ezequiels.90@gmail.com>,
     Victor Yohai <vyohai@dm.uba.ar>
 Maintainer: Ezequiel Smucler <ezequiels.90@gmail.com>
 Description: Functions to compute the one-sided dynamic
-	principal components ('odpc') introduced in Smucler, Peña and Yohai (2017)
-	<arXiv:1708.04705>. 'odpc' is a novel dimension
+	principal components ('odpc') introduced in Smucler, Peña and Yohai (2018)
+	<DOI:10.1080/01621459.2018.1520117>. 'odpc' is a novel dimension
 	reduction technique for multivariate time series, that is useful
 	for forecasting. These dynamic principal components are defined as
 	the linear combinations of the present and past values of the series

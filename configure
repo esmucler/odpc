@@ -3862,7 +3862,8 @@ fi
 if test "${ac_pkg_openmp_c}" = no; then
   OPENMP_CFLAGS=''
 else
-  $as_echo "#define HAVE_OPENMP_C 1" >>confdefs.h
+
+$as_echo "#define HAVE_OPENMP_C 1" >>confdefs.h
 
 fi
 
@@ -4030,6 +4031,9 @@ done
 
 # Check for "restrict" support
 restrict_support="no"
+
+$as_echo "#define RESTRICT /**/" >>confdefs.h
+
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether C++ supports restrict keyword" >&5
 $as_echo_n "checking whether C++ supports restrict keyword... " >&6; }
@@ -4253,7 +4257,8 @@ fi
 if test "${ac_pkg_openmp_cxx}" = no; then
   OPENMP_CXXFLAGS=''
 else
-  $as_echo "#define HAVE_OPENMP_CXX 1" >>confdefs.h
+
+$as_echo "#define HAVE_OPENMP_C 1" >>confdefs.h
 
 fi
 

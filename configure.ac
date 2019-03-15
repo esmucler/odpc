@@ -60,7 +60,7 @@ fi
 if test "${ac_pkg_openmp_c}" = no; then
   OPENMP_CFLAGS=''
 else
-  AC_DEFINE([HAVE_OPENMP_C])
+  AC_DEFINE([HAVE_OPENMP_C], [1], [Define to 1 if you have a C compiler with OpenMP support])
 fi
 
 AC_SUBST(OPENMP_CFLAGS)
@@ -75,6 +75,7 @@ AC_CHECK_HEADERS(stdint.h inttypes.h climits cfloat)
 
 # Check for "restrict" support
 restrict_support="no"
+AC_DEFINE([RESTRICT], [], [Set to the "restrict" keyword the C++ compiler understands.])
 
 AC_MSG_CHECKING([whether C++ supports restrict keyword])
 AC_COMPILE_IFELSE([
@@ -154,7 +155,7 @@ fi
 if test "${ac_pkg_openmp_cxx}" = no; then
   OPENMP_CXXFLAGS=''
 else
-  AC_DEFINE([HAVE_OPENMP_CXX])
+    AC_DEFINE([HAVE_OPENMP_C], [1], [Define to 1 if you have a C++ compiler with OpenMP support])
 fi
 
 AC_SUBST(OPENMP_CXXFLAGS)

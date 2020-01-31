@@ -1,4 +1,4 @@
-AC_INIT(odpc, 1.0.9000)
+AC_INIT(odpc, 2.0.2)
 
 : ${R_HOME=`R RHOME`}
 if test -z "${R_HOME}"; then
@@ -8,9 +8,9 @@ fi
 
 RBIN="${R_HOME}/bin/R"
 CC=`"${RBIN}" CMD config CC`
-CPP=`"${RBIN}" CMD config CPP`
+CPP=`"${RBIN}" CMD config CC -E`
 CXX=`"${RBIN}" CMD config CXX`
-CXXCPP=`"${RBIN}" CMD config CXXCPP`
+CXXCPP=`"${RBIN}" CMD config CXX -E`
 CXXFLAGS=`"${RBIN}" CMD config CXXFLAGS`
 CPPFLAGS=`"${RBIN}" CMD config CPPFLAGS`
 

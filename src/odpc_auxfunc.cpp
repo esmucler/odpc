@@ -273,7 +273,8 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
   // passf_ini: logical: is f_ini being passed?
   // tol: relative precision, stopping criterion
   // niter_max: maximum number of iterations
-  // method: 1 =  ALS, 2 = CD in a, LS in B
+  // method: 1 =  ALS, 2 = CD in a, LS in B, 3 = GD in A, LS in B
+  // eta: step size for GD
   // OUTPUT
   // k1: number of lags used to define f
   // k2: number of lags used to reconstruct

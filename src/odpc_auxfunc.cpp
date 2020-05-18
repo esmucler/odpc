@@ -220,7 +220,13 @@ void getVecAMatD_grad(const arma::mat & resp,
   vecresp = vectorise(resp) - kron(outalpha, ident) * one;
   W = kron(outB.t(), ident);
   out_WC = W * C;
-  outa = outa + 2 * eta * out_WC.t() *  (vecresp - out_WC * outa);
+  if (eta > 0){
+    outa = outa + 2 * eta * out_WC.t() *  (vecresp - out_WC * outa);
+  } else {
+    arma::vec grad = (-2) * out_WC.t() *  (vecresp - out_WC * outa);
+    double step = (0.5) * pow(norm(grad), 2)/pow(norm(out_WC * grad), 2);
+    outa = outa - step * grad;
+  }
   // outa = outa + 2 * eta * C.t() * W.t() * vecresp - C.t() * W.t() * W * C * outa;
   // double norma = norm(outa);
   // outa /= norma;

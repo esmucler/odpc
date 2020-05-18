@@ -1,4 +1,4 @@
-odpc <- function(Z, ks, method, tol = 1e-04, niter_max = 500) {
+odpc <- function(Z, ks, method, tol = 1e-04, niter_max = 500, eta = 0.1) {
   # Computes One Sided Dynamic Principal Components.
   #INPUT
   # Z: data matrix, series by columns 
@@ -53,8 +53,8 @@ odpc <- function(Z, ks, method, tol = 1e-04, niter_max = 500) {
     stop("For each component, either k1 or k2 should be positive")
   }
   if (!missing(method)) {
-    if (!(method %in% c('ALS', 'mix'))) {
-      stop("method should be ALS or mix")
+    if (!(method %in% c('ALS', 'mix', 'gradient'))) {
+      stop("method should be ALS, mix or gradient")
     }
   }
   
@@ -67,7 +67,7 @@ odpc <- function(Z, ks, method, tol = 1e-04, niter_max = 500) {
       method <- 1
     }
   } else {
-    method <- switch(method, 'ALS' = 1, 'mix' = 2)  
+    method <- switch(method, 'ALS' = 1, 'mix' = 2, 'gradient' = 3)  
   }
   
   output <- vector('list', num_comp)
@@ -90,7 +90,7 @@ odpc <- function(Z, ks, method, tol = 1e-04, niter_max = 500) {
     }
     output[[iter]] <- convert_rename_comp(odpc_priv(Z = Z, resp=resp, k_tot_max=k_tot_max,
                                                     k1 = ks[iter, 1], k2 = ks[iter, 2], num_comp=iter, f_ini = 0,
-                                                    passf_ini = FALSE, tol = tol, niter_max = niter_max, method = method),
+                                                    passf_ini = FALSE, tol = tol, niter_max = niter_max, method = method, eta=eta),
                                           wrap=FALSE)
     res <- output[[iter]]$res #current residuals
   }

@@ -17,11 +17,11 @@ getMSE <- function(resp, Fitted) {
     .Call(`_odpc_getMSE`, resp, Fitted)
 }
 
-odpc_priv <- function(Z, resp, k_tot_max, k1, k2, num_comp, f_ini, passf_ini, tol, niter_max, method) {
-    .Call(`_odpc_odpc_priv`, Z, resp, k_tot_max, k1, k2, num_comp, f_ini, passf_ini, tol, niter_max, method)
+odpc_priv <- function(Z, resp, k_tot_max, k1, k2, num_comp, f_ini, passf_ini, tol, niter_max, method, eta) {
+    .Call(`_odpc_odpc_priv`, Z, resp, k_tot_max, k1, k2, num_comp, f_ini, passf_ini, tol, niter_max, method, eta)
 }
 
-roll_odpc <- function(data_field, response_field, k, k_tot_max, num_comp, window_size, tol, niter_max, method, ncores) {
-    .Call(`_odpc_roll_odpc`, data_field, response_field, k, k_tot_max, num_comp, window_size, tol, niter_max, method, ncores)
+roll_odpc <- function(data_field, response_field, k, k_tot_max, num_comp, window_size, tol, niter_max, method, eta, ncores) {
+    .Call(`_odpc_roll_odpc`, data_field, response_field, k, k_tot_max, num_comp, window_size, tol, niter_max, method, eta, ncores)
 }
 

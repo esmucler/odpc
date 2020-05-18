@@ -60,8 +60,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // odpc_priv
-arma::field<arma::mat> odpc_priv(const arma::mat& Z, const arma::mat& resp, const int& k_tot_max, const int& k1, const int& k2, const arma::uword& num_comp, const arma::vec& f_ini, const bool& passf_ini, const double& tol, const int& niter_max, const int& method);
-RcppExport SEXP _odpc_odpc_priv(SEXP ZSEXP, SEXP respSEXP, SEXP k_tot_maxSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP num_compSEXP, SEXP f_iniSEXP, SEXP passf_iniSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP methodSEXP) {
+arma::field<arma::mat> odpc_priv(const arma::mat& Z, const arma::mat& resp, const int& k_tot_max, const int& k1, const int& k2, const arma::uword& num_comp, const arma::vec& f_ini, const bool& passf_ini, const double& tol, const int& niter_max, const int& method, const double& eta);
+RcppExport SEXP _odpc_odpc_priv(SEXP ZSEXP, SEXP respSEXP, SEXP k_tot_maxSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP num_compSEXP, SEXP f_iniSEXP, SEXP passf_iniSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP methodSEXP, SEXP etaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -76,13 +76,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
     Rcpp::traits::input_parameter< const int& >::type niter_max(niter_maxSEXP);
     Rcpp::traits::input_parameter< const int& >::type method(methodSEXP);
-    rcpp_result_gen = Rcpp::wrap(odpc_priv(Z, resp, k_tot_max, k1, k2, num_comp, f_ini, passf_ini, tol, niter_max, method));
+    Rcpp::traits::input_parameter< const double& >::type eta(etaSEXP);
+    rcpp_result_gen = Rcpp::wrap(odpc_priv(Z, resp, k_tot_max, k1, k2, num_comp, f_ini, passf_ini, tol, niter_max, method, eta));
     return rcpp_result_gen;
 END_RCPP
 }
 // roll_odpc
-arma::field<arma::field<arma::mat> > roll_odpc(const arma::field<arma::mat>& data_field, const arma::field<arma::mat>& response_field, const arma::uword& k, const arma::uword& k_tot_max, const arma::uword& num_comp, const int& window_size, const double& tol, const int& niter_max, const int& method, const arma::uword& ncores);
-RcppExport SEXP _odpc_roll_odpc(SEXP data_fieldSEXP, SEXP response_fieldSEXP, SEXP kSEXP, SEXP k_tot_maxSEXP, SEXP num_compSEXP, SEXP window_sizeSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP methodSEXP, SEXP ncoresSEXP) {
+arma::field<arma::field<arma::mat> > roll_odpc(const arma::field<arma::mat>& data_field, const arma::field<arma::mat>& response_field, const arma::uword& k, const arma::uword& k_tot_max, const arma::uword& num_comp, const int& window_size, const double& tol, const int& niter_max, const int& method, const double& eta, const arma::uword& ncores);
+RcppExport SEXP _odpc_roll_odpc(SEXP data_fieldSEXP, SEXP response_fieldSEXP, SEXP kSEXP, SEXP k_tot_maxSEXP, SEXP num_compSEXP, SEXP window_sizeSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP methodSEXP, SEXP etaSEXP, SEXP ncoresSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -95,8 +96,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double& >::type tol(tolSEXP);
     Rcpp::traits::input_parameter< const int& >::type niter_max(niter_maxSEXP);
     Rcpp::traits::input_parameter< const int& >::type method(methodSEXP);
+    Rcpp::traits::input_parameter< const double& >::type eta(etaSEXP);
     Rcpp::traits::input_parameter< const arma::uword& >::type ncores(ncoresSEXP);
-    rcpp_result_gen = Rcpp::wrap(roll_odpc(data_field, response_field, k, k_tot_max, num_comp, window_size, tol, niter_max, method, ncores));
+    rcpp_result_gen = Rcpp::wrap(roll_odpc(data_field, response_field, k, k_tot_max, num_comp, window_size, tol, niter_max, method, eta, ncores));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -106,8 +108,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_odpc_getMatrixFitted", (DL_FUNC) &_odpc_getMatrixFitted, 3},
     {"_odpc_getFini_forecast", (DL_FUNC) &_odpc_getFini_forecast, 5},
     {"_odpc_getMSE", (DL_FUNC) &_odpc_getMSE, 2},
-    {"_odpc_odpc_priv", (DL_FUNC) &_odpc_odpc_priv, 11},
-    {"_odpc_roll_odpc", (DL_FUNC) &_odpc_roll_odpc, 10},
+    {"_odpc_odpc_priv", (DL_FUNC) &_odpc_odpc_priv, 12},
+    {"_odpc_roll_odpc", (DL_FUNC) &_odpc_roll_odpc, 11},
     {NULL, NULL, 0}
 };
 

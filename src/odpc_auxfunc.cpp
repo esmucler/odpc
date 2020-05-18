@@ -88,6 +88,7 @@ void getMatrixD(const arma::mat & resp, const arma::mat & F, arma::mat & outD){
   if (condi < 1e10){
     outD = solve(F, resp);
   } else {
+    cout << 'a' << '\n';
     outD = pinv(F) * resp;
   }
 }
@@ -198,6 +199,36 @@ void getVecAMatD(const arma::mat & resp,
   }
 }
 
+void getVecAMatD_grad(const arma::mat & resp,
+                     const arma::mat & matF,
+                     const arma::mat & ident,
+                     const arma::mat & C,
+                     const arma::vec & one,
+                     const double & eta,
+                     arma::mat & out_WC,
+                     arma::vec & outa,
+                     arma::vec & outalpha,
+                     arma::mat & outB,
+                     arma::mat & outD,
+                     arma::vec & vecresp,
+                     arma::sp_mat & W){
+  int k = outD.n_rows - 2;
+  getMatrixD(resp, matF, outD);
+  // outD = outD + 2 * eta * matF.t() * (resp - matF * outD);
+  outB = outD.rows(1, k + 1);
+  outalpha = outD.row(0).t();
+  vecresp = vectorise(resp) - kron(outalpha, ident) * one;
+  W = kron(outB.t(), ident);
+  out_WC = W * C;
+  outa = outa + 2 * eta * out_WC.t() *  (vecresp - out_WC * outa);
+  // outa = outa + 2 * eta * C.t() * W.t() * vecresp - C.t() * W.t() * W * C * outa;
+  // double norma = norm(outa);
+  // outa /= norma;
+  // for (arma::uword i = 1; i < outD.n_rows; i++){
+  //   outD.row(i) *= norma; 
+  // }
+}
+
 
 // [[Rcpp::export]]
 double getMSE(const arma::mat & resp,
@@ -220,14 +251,15 @@ double getMSE(const arma::mat & resp,
 arma::field<arma::mat> odpc_priv(const arma::mat & Z,
                                  const arma::mat & resp,
                                  const int & k_tot_max,
-                                  const int & k1,
-                                  const int & k2,
-                                  const arma::uword & num_comp,
-                                  const arma::vec & f_ini,
-                                  const bool & passf_ini,
-                                  const double & tol,
-                                  const int & niter_max,
-                                  const int & method) {
+                                 const int & k1,
+                                 const int & k2,
+                                 const arma::uword & num_comp,
+                                 const arma::vec & f_ini,
+                                 const bool & passf_ini,
+                                 const double & tol,
+                                 const int & niter_max,
+                                 const int & method,
+                                 const double & eta) {
   // This function computes a single ODPC with a given number of lags.
   // INPUT
   // Z: data matrix each column is a different time series
@@ -326,7 +358,26 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
       //   Rcpp::checkUserInterrupt();
       // }
     }
-  }
+    // if using gradient method
+  } else if (method == 3){
+    arma::mat WC = zeros(m * (N - k_tot_max), m * (k2 + 1));
+    matF = getFini_forecast(Z, resp, k1, k2, num_comp);
+    mse = 1e10;
+    double mse_ini = mse;
+    while (niter < niter_max and criter > tol){
+      niter += 1;
+      getVecAMatD_grad(resp, matF, ident, C, one, eta, WC, a, alpha, B, D, vecresp, W);
+      getMatrixF(Z, k1, k2, k_tot_max, a, matF);
+      Fitted = matF * D;
+      mse = getMSE(resp, Fitted);
+      // cout << mse << '\n';
+      criter = 1 - mse / mse_ini;
+      mse_ini = mse;
+      // if (niter % 2 == 0){
+      //   Rcpp::checkUserInterrupt();
+      // }
+    }
+  } 
 
   // check convergence
   if (niter < niter_max) {
@@ -378,6 +429,7 @@ arma::field<arma::field<arma::mat> > roll_odpc(const arma::field<arma::mat> & da
                                                const double & tol,
                                                const int & niter_max,
                                                const int & method,
+                                               const double & eta,
                                                const arma::uword & ncores) {
   // This function computes a ODPC over a rolling window.
   // INPUT
@@ -397,7 +449,7 @@ arma::field<arma::field<arma::mat> > roll_odpc(const arma::field<arma::mat> & da
   # pragma omp parallel for num_threads(ncores)
   for (int ind=0; ind < window_size; ind++){
     output(ind, 0) = odpc_priv(data_field(ind, 0), response_field(ind, 0), k_tot_max, k, k,
-                               num_comp, nothing, false, tol, niter_max, method);
+                               num_comp, nothing, false, tol, niter_max, method, eta);
   }
   # pragma omp barrier
   return(output);

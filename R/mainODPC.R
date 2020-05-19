@@ -61,8 +61,8 @@ odpc <- function(Z, ks, method, tol = 1e-04, niter_max = 500) {
   num_comp <- nrow(ks)
   
   if (missing(method)){
-    if (ncol(Z) > 40){
-      method <- 2 # Use mix method for moderately fat data sets
+    if (ncol(Z) > 20){
+      method <- 3 # Use gradient method for moderately fat data sets
     } else {
       method <- 1
     }
@@ -214,8 +214,8 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=
   }
   
   if (missing(method)){
-    if (ncol(Z) > 40){
-      method <- 2 # Use mix method for moderately fat data sets
+    if (ncol(Z) > 20){
+      method <- 3 # Use gradient method for moderately fat data sets
     } else {
       method <- 1
     }
@@ -407,8 +407,8 @@ crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores = 1, method, tol
   }
   
   if (missing(method)){
-    if (ncol(Z) > 40){
-      method <- 2 # Use mix method for moderately fat data sets
+    if (ncol(Z) > 20){
+      method <- 3 # Use gradient method for moderately fat data sets
     } else {
       method <- 1
     }

@@ -1,3 +1,8 @@
+odpc 2.0.3
+==============
+
+* Add "gradient" optimization method, that alternates between solving least-squares problems for computing the loadings matrix and doing gradient descent steps for updating the vector of coefficients that defines the dynamic principal component. This is the new default when the dimension of the input matrix is greater than 10 and provides huge (up to ~400x) performance boosts.
+
 odpc 2.0.2
 ==============
 

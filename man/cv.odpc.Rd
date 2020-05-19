@@ -4,9 +4,20 @@
 \alias{cv.odpc}
 \title{Automatic Choice of Tuning Parameters for One-Sided Dynamic Principal Components via Cross-Validation}
 \usage{
-cv.odpc(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k = 1,
-  ncores_w = 1, method, tol = 1e-04, niter_max = 500, train_tol = 0.01,
-  train_niter_max = 100)
+cv.odpc(
+  Z,
+  h,
+  k_list = 1:5,
+  max_num_comp = 5,
+  window_size,
+  ncores_k = 1,
+  ncores_w = 1,
+  method,
+  tol = 1e-04,
+  niter_max = 500,
+  train_tol = 0.01,
+  train_niter_max = 100
+)
 }
 \arguments{
 \item{Z}{Data matrix. Each column is a different time series.}
@@ -23,7 +34,7 @@ cv.odpc(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k = 1,
 
 \item{ncores_w}{Number of cores to parallelise over the rolling window (nested in \code{k_list}).}
 
-\item{method}{A string specifying the algorithm used. Options are 'ALS' or 'mix'. See details in \code{\link{odpc}}.}
+\item{method}{A string specifying the algorithm used. Options are 'ALS', 'mix' or 'gradient'. See details in \code{\link{odpc}}.}
 
 \item{tol}{Relative precision. Default is 1e-4.}
 
@@ -95,7 +106,7 @@ for (i in 1:m) {
 fit <- cv.odpc(x, h=1, k_list = 1:2, max_num_comp = 1, window_size = 2, ncores_k = 2, ncores_w = 2)
 }
 \references{
-Peña D., Smucler E. and Yohai V.J. (2018). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Journal of the American Statistical Association. To appear.
+Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Available at https://arxiv.org/abs/1708.04705.
 }
 \seealso{
 \code{\link{odpc}}, \code{\link{crit.odpc}}, \code{\link{forecast.odpcs}}

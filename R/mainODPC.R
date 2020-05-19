@@ -1,4 +1,4 @@
-odpc <- function(Z, ks, method, tol = 1e-04, niter_max = 500, eta = 1e-6) {
+odpc <- function(Z, ks, method, tol = 1e-04, niter_max = 500) {
   # Computes One Sided Dynamic Principal Components.
   #INPUT
   # Z: data matrix, series by columns 
@@ -10,7 +10,6 @@ odpc <- function(Z, ks, method, tol = 1e-04, niter_max = 500, eta = 1e-6) {
   # method: Algorithm used. Options are 'ALS', 'mix' or 'gradient'. See details below.
   # niter_max : maximum number of iterations. Default is 500
   # tol : tolerance parameter to declare convergence. Default is 1e-4
-  # eta : step size for gradient descent. Default is 1e-6
   
   #OUTPUT
   # A list of length equal to the number of computed components. The i-th entry of this list is an object of class
@@ -91,7 +90,7 @@ odpc <- function(Z, ks, method, tol = 1e-04, niter_max = 500, eta = 1e-6) {
     }
     output[[iter]] <- convert_rename_comp(odpc_priv(Z = Z, resp=resp, k_tot_max=k_tot_max,
                                                     k1 = ks[iter, 1], k2 = ks[iter, 2], num_comp=iter, f_ini = 0,
-                                                    passf_ini = FALSE, tol = tol, niter_max = niter_max, method = method, eta=eta),
+                                                    passf_ini = FALSE, tol = tol, niter_max = niter_max, method = method),
                                           wrap=FALSE)
     res <- output[[iter]]$res #current residuals
   }
@@ -119,7 +118,6 @@ odpc <- function(Z, ks, method, tol = 1e-04, niter_max = 500, eta = 1e-6) {
 #' @param niter_max Integer. Maximum number of iterations. Default is 500.
 #' @param train_tol Relative precision used in cross-validation. Default is 1e-2.
 #' @param train_niter_max Integer. Maximum number of iterations used in cross-validation. Default is 100.
-#' @param eta Step size for gradient descent. Default is 1e-6.
 
 
 #' @return 
@@ -188,7 +186,7 @@ odpc <- function(Z, ks, method, tol = 1e-04, niter_max = 500, eta = 1e-6) {
 #' # loop over k, two cores for the loop over the window
 #' fit <- cv.odpc(x, h=1, k_list = 1:2, max_num_comp = 1, window_size = 2, ncores_k = 2, ncores_w = 2)
 
-cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=1, ncores_w=1, method, tol = 1e-04, niter_max = 500, train_tol = 1e-2, train_niter_max = 100, eta=1e-6) {
+cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=1, ncores_w=1, method, tol = 1e-04, niter_max = 500, train_tol = 1e-2, train_niter_max = 100) {
   
   if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
           !inherits(Z, "xts"), !inherits(Z, "data.frame"),
@@ -242,7 +240,7 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=
   response_field <- build_response_field(data_field=data_field, k_trun = 2 * k_list)
   fits <- grid_odpc(data_field = data_field, response_field = response_field,
                     num_comp = num_comp, k_list=k_list, k_maxs = 2 * k_list, window_size=window_size, tol=train_tol,
-                    niter_max=train_niter_max, method=method, ncores_w=ncores_w, eta=eta)
+                    niter_max=train_niter_max, method=method, ncores_w=ncores_w)
   best_fit <- get_best_fit(fits, Z=Z, h=h, window_size = window_size)
   opt_comp <- best_fit$opt_comp
   new_best_mse <- best_fit$opt_mse
@@ -260,7 +258,7 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=
     # compute another component using the previous fitted ones
     fits <- grid_odpc(data_field = data_field, response_field = response_field,
                       num_comp = num_comp + 1, k_list=k_list, k_maxs=k_maxs, window_size=window_size, tol=train_tol,
-                      niter_max=train_niter_max, method=method, ncores_w=ncores_w, eta=eta)
+                      niter_max=train_niter_max, method=method, ncores_w=ncores_w)
     # append to current components the new fitted ones; extended fits has one entry per k; each of these
     # entries has window_size entries; in each of these we have: the current optimal component computed along the
     # rolling window, with the latest component appended at the end
@@ -287,18 +285,18 @@ cv.odpc <- function(Z, h, k_list = 1:5, max_num_comp = 5, window_size, ncores_k=
   }
   methods <- c('ALS', 'mix', 'gradient')
   method <- methods[method]
-  output <- odpc(Z=Z, ks=as.numeric(ks), method=method, tol=tol, niter_max=niter_max, eta=eta)
+  output <- odpc(Z=Z, ks=as.numeric(ks), method=method, tol=tol, niter_max=niter_max)
   on.exit(stopCluster(cl))
   return(output)
 }
 
-grid_odpc <- function(data_field, response_field, k_list, k_maxs, num_comp, window_size, tol, niter_max, method, ncores_w=1, eta){
+grid_odpc <- function(data_field, response_field, k_list, k_maxs, num_comp, window_size, tol, niter_max, method, ncores_w=1){
     output <- list()
     ind <- NULL
     output <- foreach(ind=1:length(k_list), .packages=c('odpc'))%dopar%{    
                   roll_odpc(data_field=data_field, response_field=response_field[[ind]],
                             k=k_list[ind], k_tot_max=k_maxs[ind], num_comp=num_comp, window_size=window_size, tol=tol,
-                            niter_max=niter_max, method=method, ncores=ncores_w, eta=eta)
+                            niter_max=niter_max, method=method, ncores=ncores_w)
     }
     output <- convert_rename(output)
     return(output)
@@ -313,7 +311,6 @@ grid_odpc <- function(data_field, response_field, k_list, k_maxs, num_comp, wind
 #' @param method A string specifying the algorithm used. Options are 'ALS', 'mix' or 'gradient'. See details in \code{\link{odpc}}.
 #' @param tol Relative precision. Default is 1e-4.
 #' @param niter_max Integer. Maximum number of iterations. Default is 500.
-#' @param eta Step size for gradient descent. Default is 1e-6.
 
 #' @return 
 #' An object of class odpcs, that is, a list of length equal to the number of computed components, each computed using the optimal value of k. 
@@ -382,7 +379,7 @@ grid_odpc <- function(data_field, response_field, k_list, k_maxs, num_comp, wind
 #' # Choose parameters to perform a one step ahead forecast. Use 1 or 2 lags, only one component 
 #' fit <- crit.odpc(x, k_list = 1:2, max_num_comp = 1)
 
-crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores = 1, method, tol = 1e-04, niter_max = 500, eta=1e-6) {
+crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores = 1, method, tol = 1e-04, niter_max = 500) {
   
   if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
           !inherits(Z, "xts"), !inherits(Z, "data.frame"),
@@ -430,7 +427,7 @@ crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores = 1, method, tol
   
   response_field <- lapply(k_trun, function(k){ Z[(k+1):nrow(Z),]  })
   fits <- grid_crit_odpc(Z = Z, response_field = response_field, k_maxs = 2 * k_list, num_comp = num_comp,
-                         k_list=k_list, tol=tol, niter_max=niter_max, method=method, eta=eta)
+                         k_list=k_list, tol=tol, niter_max=niter_max, method=method)
   best_fit <- get_best_fit_crit(fits, k_acum = 0)
   opt_comp <- best_fit$opt_comp
   new_best_crit <- best_fit$opt_crit
@@ -448,7 +445,7 @@ crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores = 1, method, tol
     # compute another component using the previous fitted ones
     response_field <- lapply(k_trun, function(k){ res[(k+1):nrow(res),]  })
     fits <- grid_crit_odpc(Z = Z, response_field = response_field, k_maxs = k_maxs, num_comp = num_comp + 1,
-                           k_list=k_list, tol=tol, niter_max=niter_max, method=method, eta=eta)
+                           k_list=k_list, tol=tol, niter_max=niter_max, method=method)
     
     
     # get the optimal k for the new component
@@ -481,14 +478,14 @@ crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores = 1, method, tol
   return(output)
 }
 
-grid_crit_odpc <- function(Z, response_field, k_maxs, k_list, num_comp, tol, niter_max, method, eta){
+grid_crit_odpc <- function(Z, response_field, k_maxs, k_list, num_comp, tol, niter_max, method){
   output <- list()
   ind <- NULL
   output <- foreach(ind=1:length(k_list), .packages=c('odpc'))%dopar%{    
       convert_rename_comp(odpc_priv(Z = Z, resp = response_field[[ind]], k_tot_max = k_maxs[ind],
                                     k1 = k_list[ind], k2 = k_list[ind], num_comp=num_comp,
                                     f_ini = c(0), passf_ini = FALSE, tol = tol, niter_max = niter_max,
-                                    method = method, eta=eta),
+                                    method = method),
                           wrap=TRUE)
   }
   return(output)

@@ -4,8 +4,15 @@
 \alias{crit.odpc}
 \title{Automatic Choice of Tuning Parameters for One-Sided Dynamic Principal Components via the Minimization of an Information Criterion}
 \usage{
-crit.odpc(Z, k_list = 1:5, max_num_comp = 5, ncores = 1, method,
-  tol = 1e-04, niter_max = 500)
+crit.odpc(
+  Z,
+  k_list = 1:5,
+  max_num_comp = 5,
+  ncores = 1,
+  method,
+  tol = 1e-04,
+  niter_max = 500
+)
 }
 \arguments{
 \item{Z}{Data matrix. Each column is a different time series.}
@@ -16,7 +23,7 @@ crit.odpc(Z, k_list = 1:5, max_num_comp = 5, ncores = 1, method,
 
 \item{ncores}{Number of cores to use in parallel computations.}
 
-\item{method}{A string specifying the algorithm used. Options are 'ALS' or 'mix'. See details in \code{\link{odpc}}.}
+\item{method}{A string specifying the algorithm used. Options are 'ALS', 'mix' or 'gradient'. See details in \code{\link{odpc}}.}
 
 \item{tol}{Relative precision. Default is 1e-4.}
 
@@ -81,7 +88,7 @@ for (i in 1:m) {
 fit <- crit.odpc(x, k_list = 1:2, max_num_comp = 1)
 }
 \references{
-Peña D., Smucler E. and Yohai V.J. (2018). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Journal of the American Statistical Association. To appear.
+Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Available at https://arxiv.org/abs/1708.04705.
 
 Bai J. and Ng S. (2002). “Determining the Number of Factors in Approximate Factor Models.” Econometrica, 70(1), 191–221.
 }

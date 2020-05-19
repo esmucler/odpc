@@ -88,7 +88,6 @@ void getMatrixD(const arma::mat & resp, const arma::mat & F, arma::mat & outD){
   if (condi < 1e10){
     outD = solve(F, resp);
   } else {
-    cout << 'a' << '\n';
     outD = pinv(F) * resp;
   }
 }
@@ -204,7 +203,6 @@ void getVecAMatD_grad(const arma::mat & resp,
                      const arma::mat & ident,
                      const arma::mat & C,
                      const arma::vec & one,
-                     const double & eta,
                      arma::mat & out_WC,
                      arma::vec & outa,
                      arma::vec & outalpha,
@@ -220,13 +218,9 @@ void getVecAMatD_grad(const arma::mat & resp,
   vecresp = vectorise(resp) - kron(outalpha, ident) * one;
   W = kron(outB.t(), ident);
   out_WC = W * C;
-  if (eta > 0){
-    outa = outa + 2 * eta * out_WC.t() *  (vecresp - out_WC * outa);
-  } else {
-    arma::vec grad = (-2) * out_WC.t() *  (vecresp - out_WC * outa);
-    double step = (0.5) * pow(norm(grad), 2)/pow(norm(out_WC * grad), 2);
-    outa = outa - step * grad;
-  }
+  arma::vec grad = (-2) * out_WC.t() *  (vecresp - out_WC * outa);
+  double step = (0.5) * pow(norm(grad), 2)/pow(norm(out_WC * grad), 2);
+  outa = outa - step * grad;
   // outa = outa + 2 * eta * C.t() * W.t() * vecresp - C.t() * W.t() * W * C * outa;
   // double norma = norm(outa);
   // outa /= norma;
@@ -264,8 +258,7 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
                                  const bool & passf_ini,
                                  const double & tol,
                                  const int & niter_max,
-                                 const int & method,
-                                 const double & eta) {
+                                 const int & method) {
   // This function computes a single ODPC with a given number of lags.
   // INPUT
   // Z: data matrix each column is a different time series
@@ -280,7 +273,6 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
   // tol: relative precision, stopping criterion
   // niter_max: maximum number of iterations
   // method: 1 =  ALS, 2 = CD in a, LS in B, 3 = GD in A, LS in B
-  // eta: step size for GD
   // OUTPUT
   // k1: number of lags used to define f
   // k2: number of lags used to reconstruct
@@ -373,7 +365,7 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
     double mse_ini = mse;
     while (niter < niter_max and criter > tol){
       niter += 1;
-      getVecAMatD_grad(resp, matF, ident, C, one, eta, WC, a, alpha, B, D, vecresp, W);
+      getVecAMatD_grad(resp, matF, ident, C, one, WC, a, alpha, B, D, vecresp, W);
       getMatrixF(Z, k1, k2, k_tot_max, a, matF);
       Fitted = matF * D;
       mse = getMSE(resp, Fitted);
@@ -436,7 +428,6 @@ arma::field<arma::field<arma::mat> > roll_odpc(const arma::field<arma::mat> & da
                                                const double & tol,
                                                const int & niter_max,
                                                const int & method,
-                                               const double & eta,
                                                const arma::uword & ncores) {
   // This function computes a ODPC over a rolling window.
   // INPUT
@@ -448,7 +439,7 @@ arma::field<arma::field<arma::mat> > roll_odpc(const arma::field<arma::mat> & da
   // window_size: the size of the window
   // tol: relative precision, stopping criterion
   // niter_max: maximum number of iterations
-  // method: 1 =  ALS, 2 = CD in a, LS in B
+  // method: 1 =  ALS, 2 = CD in a, LS in B, 3 = gradient descent in a, LS in B
   // OUTPUT
   // a list of the same length as windows_size, each entry being an ODPC
   arma::vec nothing = zeros(2);
@@ -456,7 +447,7 @@ arma::field<arma::field<arma::mat> > roll_odpc(const arma::field<arma::mat> & da
   # pragma omp parallel for num_threads(ncores)
   for (int ind=0; ind < window_size; ind++){
     output(ind, 0) = odpc_priv(data_field(ind, 0), response_field(ind, 0), k_tot_max, k, k,
-                               num_comp, nothing, false, tol, niter_max, method, eta);
+                               num_comp, nothing, false, tol, niter_max, method);
   }
   # pragma omp barrier
   return(output);

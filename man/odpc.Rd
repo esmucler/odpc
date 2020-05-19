@@ -10,7 +10,7 @@ Computes One-Sided Dynamic Principal Components for a given number of lags.
 \arguments{
   \item{Z}{Data matrix. Each column is a different time series.}
   \item{ks}{Matrix or vector of integers. If a matrix, each row is the vector with number of lags to use for each              component. First column has the number of lags used to define the dynamic principal component (\eqn{k_1}), second column has the number of lags of the dynamic principal component used to reconstruct the series (\eqn{k_2}). If a vector, its entries are taken as both \eqn{k_1} and \eqn{k_2}             for each component}
-  \item{method}{A string specifying the algorithm used. Options are 'ALS' or 'mix'. See details below.}
+  \item{method}{A string specifying the algorithm used. Options are 'ALS', 'mix' or 'gradient'. See details below.}
   \item{tol}{Relative precision. Default is 1e-4.}
   \item{niter_max}{Integer. Maximum number of iterations. Default is 500.}
 }
@@ -59,7 +59,7 @@ that satisfy
 The second one-sided dynamic principal component is defined similarly, but now the
 residuals of the first one-sided dynamic principal component are to be reconstructed.
 
-If method = 'ALS', an Alternating Least Squares type algorithm is used to compute the solution. If 'mix' is chosen, in each iteration Least Squares is used to compute the matrix of loadings and intercepts, but one iteration of Coordinate Descent is performed to compute the vector a that defines the dynamic principal component. By default, 'ALS' is used when the number of series is less than 40, else 'mix' is used.
+If method = 'ALS', an Alternating Least Squares type algorithm is used to compute the solution. If 'mix' is chosen, in each iteration Least Squares is used to compute the matrix of loadings and intercepts, but one iteration of Coordinate Descent is performed to compute the vector a that defines the dynamic principal component. If method = 'gradient', in each iteration Least Squares is used to compute the matrix of loadings and intercepts, but one iteration of Gradient Descent is performed to compute the vector a that defines the dynamic principal component. By default, 'ALS' is used when the number of series is less than 40, else 'mix' is used.
 }
 
 \value{
@@ -77,7 +77,7 @@ If method = 'ALS', an Alternating Least Squares type algorithm is used to comput
 }
 
 \references{
-Peña D., Smucler E. and Yohai V.J. (2018). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Journal of the American Statistical Association. To appear.
+Peña D., Smucler E. and Yohai V.J. (2019). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Journal of the American Statistical Association.
 }
 
 \seealso{

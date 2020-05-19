@@ -5,7 +5,7 @@
 odpc
 ====
 
-This package provides functions for computing One-Sided Dynamic Principal Components, a novel multivariate time series dimension reduction technique proposed in [Peña, Smucler and Yohai (2017)](https://arxiv.org/abs/1708.04705).
+This package provides functions for computing One-Sided Dynamic Principal Components, a novel multivariate time series dimension reduction technique proposed in [Peña, Smucler and Yohai (2019)](https://doi.org/10.1080/01621459.2018.1520117).
 
 ------------------------------------------------------------------------
 

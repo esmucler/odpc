@@ -222,11 +222,11 @@ void getVecAMatD_grad(const arma::mat & resp,
   double step = (0.5) * pow(norm(grad), 2)/pow(norm(out_WC * grad), 2);
   outa = outa - step * grad;
   // outa = outa + 2 * eta * C.t() * W.t() * vecresp - C.t() * W.t() * W * C * outa;
-  // double norma = norm(outa);
-  // outa /= norma;
-  // for (arma::uword i = 1; i < outD.n_rows; i++){
-  //   outD.row(i) *= norma; 
-  // }
+  double norma = norm(outa);
+  outa /= norma;
+  for (arma::uword i = 1; i < outD.n_rows; i++){
+    outD.row(i) *= norma;
+  }
 }
 
 

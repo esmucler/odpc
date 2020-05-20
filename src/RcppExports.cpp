@@ -6,6 +6,20 @@
 
 using namespace Rcpp;
 
+// getMatrixZj0
+arma::mat getMatrixZj0(const arma::mat& Z, const int& k1, const int& k_tot, const int& j);
+RcppExport SEXP _odpc_getMatrixZj0(SEXP ZSEXP, SEXP k1SEXP, SEXP k_totSEXP, SEXP jSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< const int& >::type k1(k1SEXP);
+    Rcpp::traits::input_parameter< const int& >::type k_tot(k_totSEXP);
+    Rcpp::traits::input_parameter< const int& >::type j(jSEXP);
+    rcpp_result_gen = Rcpp::wrap(getMatrixZj0(Z, k1, k_tot, j));
+    return rcpp_result_gen;
+END_RCPP
+}
 // getMatrixFore
 arma::mat getMatrixFore(const arma::vec& f, const int& k2, const int& h);
 RcppExport SEXP _odpc_getMatrixFore(SEXP fSEXP, SEXP k2SEXP, SEXP hSEXP) {
@@ -102,6 +116,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_odpc_getMatrixZj0", (DL_FUNC) &_odpc_getMatrixZj0, 4},
     {"_odpc_getMatrixFore", (DL_FUNC) &_odpc_getMatrixFore, 3},
     {"_odpc_getMatrixFitted", (DL_FUNC) &_odpc_getMatrixFitted, 3},
     {"_odpc_getFini_forecast", (DL_FUNC) &_odpc_getFini_forecast, 5},

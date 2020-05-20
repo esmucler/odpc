@@ -1,7 +1,7 @@
 Package: odpc
 Type: Package
 Title: One-Sided Dynamic Principal Components
-Version: 2.0.3
+Version: 2.0.3.9000
 Date: 2020-05-19
 Author: Daniel Peña <daniel.pena@uc3m.es>,
     Ezequiel Smucler <ezequiels.90@gmail.com>,
@@ -16,7 +16,7 @@ Description: Functions to compute the one-sided dynamic
 	that minimize the reconstruction mean squared error.
 License: GPL (>= 2)
 Biarch: true
-Imports: methods, Rcpp (>= 0.12.7), forecast, parallel, doParallel, foreach
+Imports: methods, Rcpp (>= 0.12.7), forecast, parallel, doParallel, foreach, glmnet, MASS
 LinkingTo: Rcpp, RcppArmadillo (>= 0.7.500.0.0)
 Suggests: testthat
 Depends:

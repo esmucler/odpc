@@ -11,6 +11,7 @@ arma::mat getMatrixZj(const arma::mat & Z, const int & k_tot, const int & j){
   return(Zj);
 }
 
+// [[Rcpp::export]]
 arma::mat getMatrixZj0(const arma::mat & Z, const int & k1,
                        const int & k_tot, const int & j){
   // Get Zj0 = (Zj, ..., Zj-k1)

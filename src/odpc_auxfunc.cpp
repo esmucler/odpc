@@ -68,6 +68,21 @@ arma::mat getMatrixFitted(const arma::vec & f,
   return(outF);
 }
 
+// [[Rcpp::export]]
+arma::mat getMatrixF_sparse_forecast(const arma::mat & Z, const int & k1,
+                                     const int & k2, const int & k_tot,
+                                     const arma::vec & a){
+  // Get matrix F whose columns are 1 and f_{j} for j = k_tot, ..., k1
+  int N = Z.n_rows;
+  arma::mat outF = zeros(N - k_tot, k2 + 2);
+  for (int h = 0; h <= k2; h++){
+    //first column is already filled with ones
+    outF.col(h + 1) = getMatrixZj0(Z, k1, k_tot, k_tot - h) * a;
+  }
+  outF.col(0).fill(1);
+  return(outF);
+}
+
 void getMatrixF(const arma::mat & Z, const int & k1,
                 const int & k2, const int & k_tot,
                 const arma::vec & a, arma::mat & outF){
@@ -77,6 +92,20 @@ void getMatrixF(const arma::mat & Z, const int & k1,
     outF.col(h + 1) = getMatrixZj0(Z, k1, k_tot, k_tot - h) * a;
   }
 }
+
+// // [[Rcpp::export]]
+// double getReconsMSE(const arma::mat & Z, const arma::mat & response,
+//                        const arma::vec & a, const arma::mat & matD,
+//                        const int & k1, const int & k2, const int & k_tot){
+//   int N_rec = response.n_rows;
+//   int m = response.n_cols;
+//   arma::mat matF = zeros(N_rec, k2 + 2);
+//   matF.col(0).fill(1);
+//   getMatrixF(Z, k1, k2, k_tot, a, matF);
+//   double mse = accu(pow(response - matF * matD, 2));
+//   mse /= (N_rec * m);
+//   return(mse);
+// }
 
 void getMatrixD(const arma::mat & resp, const arma::mat & F, arma::mat & outD){
   // Get matrix D of loadings and intercepts. First row contains the intercepts (alpha)
@@ -383,7 +412,6 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
   if (niter < niter_max) {
     conv = true;
   }
-
   if (k2 > 0) {
     fout(span(0, k2 - 1)) = matF(span(0, k2 - 1), k2 + 1);
     fout(span(k2, N - (k_tot_max - k2) - 1)) = matF.col(1);

@@ -46,6 +46,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// getMatrixF_sparse_forecast
+arma::mat getMatrixF_sparse_forecast(const arma::mat& Z, const int& k1, const int& k2, const int& k_tot, const arma::vec& a);
+RcppExport SEXP _odpc_getMatrixF_sparse_forecast(SEXP ZSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP k_totSEXP, SEXP aSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< const int& >::type k1(k1SEXP);
+    Rcpp::traits::input_parameter< const int& >::type k2(k2SEXP);
+    Rcpp::traits::input_parameter< const int& >::type k_tot(k_totSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type a(aSEXP);
+    rcpp_result_gen = Rcpp::wrap(getMatrixF_sparse_forecast(Z, k1, k2, k_tot, a));
+    return rcpp_result_gen;
+END_RCPP
+}
 // getFini_forecast
 arma::mat getFini_forecast(const arma::mat& Z, const arma::mat& resp, const int& k1, const int& k2, const arma::uword& num_comp);
 RcppExport SEXP _odpc_getFini_forecast(SEXP ZSEXP, SEXP respSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP num_compSEXP) {
@@ -119,6 +134,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_odpc_getMatrixZj0", (DL_FUNC) &_odpc_getMatrixZj0, 4},
     {"_odpc_getMatrixFore", (DL_FUNC) &_odpc_getMatrixFore, 3},
     {"_odpc_getMatrixFitted", (DL_FUNC) &_odpc_getMatrixFitted, 3},
+    {"_odpc_getMatrixF_sparse_forecast", (DL_FUNC) &_odpc_getMatrixF_sparse_forecast, 5},
     {"_odpc_getFini_forecast", (DL_FUNC) &_odpc_getFini_forecast, 5},
     {"_odpc_getMSE", (DL_FUNC) &_odpc_getMSE, 2},
     {"_odpc_odpc_priv", (DL_FUNC) &_odpc_odpc_priv, 11},

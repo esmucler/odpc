@@ -159,6 +159,8 @@ sparse_odpc_path <- function(fit_component, Z, response, lambda=NULL, ...){
   matD_path <- apply(component_path, 2, function(comp) {update_loadings(comp, response, k1=k1, k2=k2)})
   sparse_odpc_path <- lapply(seq_along(lambda_fitted), function(k) {build_sparse_component(mse=matD_path[[k]]$mse, matD=matD_path[[k]]$matD, lambda=lambda_fitted[k],
                                                                                 component=component_path[,k], a=coordinates_path[,k], fit=fit_component)}) 
+  fit_component$lambda <- 0
+  sparse_odpc_path <- append(sparse_odpc_path, fit_component)
   return(sparse_odpc_path)
 }
 

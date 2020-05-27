@@ -1,4 +1,4 @@
-cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 5, window_size, ncores_w=1, method, tol = 1e-04, niter_max = 500) {
+cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, method, tol = 1e-04, niter_max = 500) {
   
   if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
           !inherits(Z, "xts"), !inherits(Z, "data.frame"),
@@ -65,7 +65,7 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 5, window_size, ncore
     num_comp <- num_comp + 1
     response_residual <- response - fitted(opt_comp)
     
-    odpc_fit <- convert_rename_comp(odpc:::odpc_priv(Z = Z_train, resp=response_residual, k_tot_max=2*k_max,
+    odpc_fit <- convert_rename_comp(odpc_priv(Z = Z_train, resp=response_residual, k_tot_max=2*k_max,
                                     k1 = k_max, k2 = k_max, num_comp=num_comp, f_ini = 0,
                                     passf_ini = FALSE, tol = tol, niter_max = niter_max, method=method_num), wrap=TRUE)
     odpc_fit <- construct.odpcs(odpc_fit, data=Z_train, fn_call=match.call())[[1]]
@@ -88,10 +88,15 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 5, window_size, ncore
     }
   }
   
-  final_fit <- odpc(Z=Z, k=rep(k_max, length(lambdas)), method=method, tol=tol, niter_max=niter_max)
-  # final_sparse_fit 
-  # on.exit(stopCluster(cl))
-  return(final_fit)
+  response_full <- Z[(2*k_max + 1):nrow(Z),]
+  final_sparse_fit <- vector(length=length(lambdas), mode='list')
+  for (iter in 1:length(lambdas)){
+    fit <- odpc(Z=Z, k=k_max, method=method, tol=tol, niter_max=niter_max)
+    final_sparse_fit[[iter]] <- sparse_odpc_path(fit[[1]], Z=Z, response=response_full, lambda=lambdas[iter])[[1]]
+    response_full <- response_full - fitted(final_sparse_fit[[iter]])
+  }
+  final_sparse_fit <- construct.odpcs(out=final_sparse_fit, data=Z, fn_call=match.call())
+  return(final_sparse_fit)
 }
 
 get_best_sparse_fit <- function(sparse_path, forecasts, Z, h){
@@ -132,7 +137,7 @@ forecast_sparse_odpc <- function(fit, rolled_data, h){
   new_comps <- rbind(new_comps, fores_comps)
   #TODO this is slow
   for (i in 1:ncomp){
-    matF <- odpc:::getMatrixFore(f=new_comps[, i], k2=k_max, h=h)
+    matF <- getMatrixFore(f=new_comps[, i], k2=k_max, h=h)
     fore <- fore + matF %*% rbind(as.vector(fit[[i]]$alpha), as.matrix(fit[[i]]$B))
   }
   return(fore)
@@ -140,7 +145,7 @@ forecast_sparse_odpc <- function(fit, rolled_data, h){
 
 get_new_comp <- function(a, rolled_data, k_max){
   # Computes new f using the a passed as input and the data in rolled_data
-  matF <- odpc:::getMatrixF_sparse_forecast(Z=rolled_data, k1=k_max, k2=k_max, k_tot=2*k_max, a=a)
+  matF <- getMatrixF_sparse_forecast(Z=rolled_data, k1=k_max, k2=k_max, k_tot=2*k_max, a=a)
   new_comp <- rep(NA, nrow(rolled_data) - k_max)
   new_comp[1:k_max] <- matF[1:k_max, k_max+2]
   new_comp[(k_max + 1):(nrow(rolled_data) - k_max)] <- matF[,2]
@@ -151,7 +156,7 @@ sparse_odpc_path <- function(fit_component, Z, response, lambda=NULL, ...){
   N <- nrow(Z)
   k1 <- fit_component$k1
   k2 <- fit_component$k2
-  matreg <- odpc:::getMatrixZj0(Z=Z, k1=k1, k_tot=k1, j=k1)
+  matreg <- getMatrixZj0(Z=Z, k1=k1, k_tot=k1, j=k1)
   reg_path <- glmnet(y=fit_component$f, x=matreg, lambda=lambda, intercept=FALSE, ...)
   lambda_fitted <- reg_path$lambda
   component_path <- predict(reg_path, newx=matreg)
@@ -165,7 +170,7 @@ sparse_odpc_path <- function(fit_component, Z, response, lambda=NULL, ...){
 }
 
 update_loadings <- function(component, response, k1, k2){
-  matF <- odpc:::getMatrixFitted(f=component, k1=k1, k2=k2)
+  matF <- getMatrixFitted(f=component, k1=k1, k2=k2)
   matD <- MASS::ginv(matF) %*% response
   mse <- mean((response - matF %*% matD)**2)
   return(list(matD=matD, mse=mse))

@@ -115,7 +115,7 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, metho
   while (new_best_mse < old_best_mse & num_comp < max_num_comp){
     
     num_comp <- num_comp + 1
-    response_residual <- response - fitted(opt_comp)
+    response_residual <- response - fitted(opt_comp, num_comp=length(opt_comp))
     
     odpc_fit <- convert_rename_comp(odpc_priv(Z = Z_train, resp=response_residual, k_tot_max=2*k_max,
                                     k1 = k_max, k2 = k_max, num_comp=num_comp, f_ini = 0,
@@ -170,7 +170,7 @@ forecast_sparse_rolled <- function(sparse_path, Z, window_size, h, ncores){
   return(forecasts)
 }
 
-forecast_sparse_path <- function(sparse_path, rolled_data, h=h){
+forecast_sparse_path <- function(sparse_path, rolled_data, h){
   # each column is a different lambda
   forecasts <- sapply(sparse_path, function(fit) {forecast_sparse_odpc(fit=fit, rolled_data=rolled_data, h=h)})
   return(forecasts)

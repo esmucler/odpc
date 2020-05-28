@@ -1,4 +1,59 @@
-cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, method, tol = 1e-04, niter_max = 500) {
+#' @title Automatic Choice of Regularization Parameters for Sparse One-Sided Dynamic Principal Components via Cross-Validation
+#' @param Z Data matrix. Each column is a different time series.
+#' @param h Forecast horizon.
+#' @param k_max Maximum possible number of lags to use.
+#' @param max_num_comp Maximum possible number of components to compute.
+#' @param window_size The size of the rolling window used to estimate the forecasting error.
+#' @param method A string specifying the algorithm used. Options are 'ALS', 'mix' or 'gradient'. See details in \code{\link{odpc}}.
+#' @param tol Relative precision. Default is 1e-4.
+#' @param niter_max Integer. Maximum number of iterations. Default is 500.
+#' @param ncores Number of cores to parallelise over.
+
+
+
+#' @return 
+#' An object of class odpcs, that is, a list of length equal to the number of computed components, each computed using the optimal value of k. 
+#' The i-th entry of this list is an object of class \code{odpc}, that is, a list with entries
+#'\item{f}{Coordinates of the i-th dynamic principal component corresponding to the periods \eqn{k_1 + 1,\dots,T}.}
+#'\item{mse}{Mean squared error of the reconstruction using the first i components.}
+#'\item{k1}{Number of lags used to define the i-th dynamic principal component f.}
+#'\item{k2}{Number of lags of f used to reconstruct.}
+#'\item{alpha}{Vector of intercepts corresponding to f.}
+#'\item{a}{Vector that defines the i-th dynamic principal component}
+#'\item{B}{Matrix of loadings corresponding to f. Row number \eqn{k} is the vector of \eqn{k-1} lag loadings.}
+#'\item{call}{The matched call.}
+#'\item{conv}{Logical. Did the iterations converge?}
+#'\item{lambda}{Regularization parameter used for this componen}
+#'\code{components}, \code{fitted}, \code{plot} and \code{print} methods are available for this class.
+#' 
+#' 
+#' @description
+#' Computes Sparse One-Sided Dynamic Principal Components, choosing the number of components and regularization parameters automatically, to minimize an estimate
+#' of the forecasting mean squared error.
+#'
+#' @details 
+#' TBA
+#' 
+#' @references
+#' Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Available at https://arxiv.org/abs/1708.04705.
+#'
+#' @seealso \code{\link{odpc}}, \code{\link{crit.odpc}}, \code{\link{forecast.odpcs}}
+#' 
+#' @examples 
+#' T <- 50 #length of series
+#' m <- 10 #number of series
+#' set.seed(1234)
+#' f <- rnorm(T + 1)
+#' x <- matrix(0, T, m)
+#' u <- matrix(rnorm(T * m), T, m)
+#' for (i in 1:m) {
+#'   x[, i] <- 10 * sin(2 * pi * (i/m)) * f[1:T] + 10 * cos(2 * pi * (i/m)) * f[2:(T + 1)] + u[, i]
+#' }
+#' # Choose parameters to perform a one step ahead forecast. Use 1 or 2 lags, only one component 
+#' # and a window size of 2 (artificially small to keep computation time low). Use two cores for the
+#' # loop over k, two cores for the loop over the window
+#' fit <- cv.sparse_odpc(x, h=1, k_max = 1, max_num_comp = 1, window_size = 2, ncores = 1)
+cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, method, tol = 1e-04, niter_max = 500, ncores=1) {
   
   if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
           !inherits(Z, "xts"), !inherits(Z, "data.frame"),
@@ -47,10 +102,7 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, metho
   sparse_path <- sparse_odpc_path(fit_component=odpc_fit[[1]], Z=Z_train, response=response)
   sparse_path <- lapply(sparse_path, function(fit) {list(fit)})
   
-  # one entry per window, roll the training data
-  data_field <- build_data_field(Z=Z, window_size = window_size, h = h)
-
-  forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, data_field=data_field, h=h)
+  forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, Z=Z, window_size=window_size, h=h, ncores=ncores)
   best_fit <- get_best_sparse_fit(forecasts=forecasts, sparse_path=sparse_path, Z=Z, h=h)
   
   opt_comp <- best_fit$opt_comp
@@ -73,7 +125,7 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, metho
     sparse_path <- sparse_odpc_path(fit_component=odpc_fit, Z=Z_train, response=response_residual)
     sparse_path <- lapply(sparse_path, function(fit) {out <- append(opt_comp, list(fit)); class(out) <- append(class(out), 'odpcs'); return(out)})
     
-    forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, data_field=data_field, h=h)
+    forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, Z=Z, window_size=window_size, h=h, ncores=ncores)
     best_fit <- get_best_sparse_fit(forecasts=forecasts, sparse_path=sparse_path, Z=Z, h=h)
     
     
@@ -91,7 +143,7 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, metho
   response_full <- Z[(2*k_max + 1):nrow(Z),]
   final_sparse_fit <- vector(length=length(lambdas), mode='list')
   for (iter in 1:length(lambdas)){
-    fit <- odpc(Z=Z, k=k_max, method=method, tol=tol, niter_max=niter_max)
+    fit <- odpc(Z=Z, ks=k_max, method=method, tol=tol, niter_max=niter_max)
     final_sparse_fit[[iter]] <- sparse_odpc_path(fit[[1]], Z=Z, response=response_full, lambda=lambdas[iter])[[1]]
     response_full <- response_full - fitted(final_sparse_fit[[iter]])
   }
@@ -112,8 +164,9 @@ get_ave_mse_sparse <- function(forecasts, Z, h){
   mses <- apply(mses_per_window, 1, mean)
 }
 
-forecast_sparse_rolled <- function(sparse_path, data_field, h){
-  forecasts <- lapply(data_field, function(rolled_data) {forecast_sparse_path(sparse_path=sparse_path, rolled_data=rolled_data, h=h)})
+forecast_sparse_rolled <- function(sparse_path, Z, window_size, h, ncores){
+  N <- nrow(Z)
+  forecasts <- mclapply(1:window_size, function(w) {forecast_sparse_path(sparse_path=sparse_path, rolled_data=Z[1:(N - h - w + 1),], h=h)}, mc.cores=ncores)
   return(forecasts)
 }
 
@@ -135,7 +188,6 @@ forecast_sparse_odpc <- function(fit, rolled_data, h){
                                                       return(forecast(auto, h)$mean[h])
                                                       }, h)
   new_comps <- rbind(new_comps, fores_comps)
-  #TODO this is slow
   for (i in 1:ncomp){
     matF <- getMatrixFore(f=new_comps[, i], k2=k_max, h=h)
     fore <- fore + matF %*% rbind(as.vector(fit[[i]]$alpha), as.matrix(fit[[i]]$B))
@@ -159,8 +211,8 @@ sparse_odpc_path <- function(fit_component, Z, response, lambda=NULL, ...){
   matreg <- getMatrixZj0(Z=Z, k1=k1, k_tot=k1, j=k1)
   reg_path <- glmnet(y=fit_component$f, x=matreg, lambda=lambda, intercept=FALSE, ...)
   lambda_fitted <- reg_path$lambda
-  component_path <- predict(reg_path, newx=matreg)
-  coordinates_path <- coef(reg_path)
+  component_path <- predict.glmnet(reg_path, newx=matreg)
+  coordinates_path <- coef.glmnet(reg_path)
   matD_path <- apply(component_path, 2, function(comp) {update_loadings(comp, response, k1=k1, k2=k2)})
   sparse_odpc_path <- lapply(seq_along(lambda_fitted), function(k) {build_sparse_component(mse=matD_path[[k]]$mse, matD=matD_path[[k]]$matD, lambda=lambda_fitted[k],
                                                                                 component=component_path[,k], a=coordinates_path[,k], fit=fit_component)}) 

@@ -92,7 +92,7 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, metho
   if (missing(window_size)){
     window_size <- floor(0.2 * nrow(Z))
   }
-  
+  cl <- makeCluster(getOption("cl.cores", ncores))
   old_best_mse <- Inf # Previous estimate of best forecast MSE
   
   Z_train <- Z[1:(nrow(Z) - window_size),]
@@ -102,7 +102,7 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, metho
   sparse_path <- sparse_odpc_path(fit_component=odpc_fit[[1]], Z=Z_train, response=response)
   sparse_path <- lapply(sparse_path, function(fit) {list(fit)})
   
-  forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, Z=Z, window_size=window_size, h=h, ncores=ncores)
+  forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, Z=Z, window_size=window_size, h=h, cl=cl)
   best_fit <- get_best_sparse_fit(forecasts=forecasts, sparse_path=sparse_path, Z=Z, h=h)
   
   opt_comp <- best_fit$opt_comp
@@ -125,7 +125,7 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, metho
     sparse_path <- sparse_odpc_path(fit_component=odpc_fit, Z=Z_train, response=response_residual)
     sparse_path <- lapply(sparse_path, function(fit) {out <- append(opt_comp, list(fit)); class(out) <- append(class(out), 'odpcs'); return(out)})
     
-    forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, Z=Z, window_size=window_size, h=h, ncores=ncores)
+    forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, Z=Z, window_size=window_size, h=h, cl=cl)
     best_fit <- get_best_sparse_fit(forecasts=forecasts, sparse_path=sparse_path, Z=Z, h=h)
     
     
@@ -148,6 +148,7 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, metho
     response_full <- response_full - fitted(final_sparse_fit[[iter]])
   }
   final_sparse_fit <- construct.odpcs(out=final_sparse_fit, data=Z, fn_call=match.call())
+  on.exit(stopCluster(cl))
   return(final_sparse_fit)
 }
 
@@ -164,9 +165,9 @@ get_ave_mse_sparse <- function(forecasts, Z, h){
   mses <- apply(mses_per_window, 1, mean)
 }
 
-forecast_sparse_rolled <- function(sparse_path, Z, window_size, h, ncores){
+forecast_sparse_rolled <- function(sparse_path, Z, window_size, h, cl){
   N <- nrow(Z)
-  forecasts <- mclapply(1:window_size, function(w) {forecast_sparse_path(sparse_path=sparse_path, rolled_data=Z[1:(N - h - w + 1),], h=h)}, mc.cores=ncores)
+  forecasts <- parLapply(cl=cl, X=1:window_size, fun=function(w) {forecast_sparse_path(sparse_path=sparse_path, rolled_data=Z[1:(N - h - w + 1),], h=h)})
   return(forecasts)
 }
 

@@ -470,8 +470,6 @@ crit.odpc <- function(Z, k_list = 1:5, max_num_comp = 5, ncores = 1, method, tol
     }
   }
   
-  methods <- c('ALS', 'mix')
-  method <- methods[method]
   fn_call <- match.call()
   output <- construct.odpcs(opt_comp, Z, fn_call)
   on.exit(stopCluster(cl))

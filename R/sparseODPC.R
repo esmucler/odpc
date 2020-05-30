@@ -142,6 +142,7 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, metho
   
   response_full <- Z[(2*k_max + 1):nrow(Z),]
   final_sparse_fit <- vector(length=length(lambdas), mode='list')
+  # TODO test the output of this loop by checking that the mses of the reconsutrctions match
   for (iter in 1:length(lambdas)){
     odpc_fit <- convert_rename_comp(odpc_priv(Z = Z, resp=response_full, k_tot_max=2*k_max,
                                          k1 = k_max, k2 = k_max, num_comp=iter, f_ini = 0,
@@ -206,7 +207,7 @@ get_new_comp <- function(a, rolled_data, k_max){
   new_comp <- rep(NA, nrow(rolled_data) - k_max)
   new_comp[1:k_max] <- matF[1:k_max, k_max+2]
   new_comp[(k_max + 1):(nrow(rolled_data) - k_max)] <- matF[,2]
-  return(new_comp) #TODO test that this with rolled_data = Z_train is equal to the f stored in odpc_fit
+  return(new_comp)
 }
 
 sparse_odpc_path <- function(fit_component, Z, response, lambda=NULL, ...){

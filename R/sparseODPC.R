@@ -143,8 +143,12 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, metho
   response_full <- Z[(2*k_max + 1):nrow(Z),]
   final_sparse_fit <- vector(length=length(lambdas), mode='list')
   for (iter in 1:length(lambdas)){
-    fit <- odpc(Z=Z, ks=k_max, method=method, tol=tol, niter_max=niter_max)
-    final_sparse_fit[[iter]] <- sparse_odpc_path(fit[[1]], Z=Z, response=response_full, lambda=lambdas[iter])[[1]]
+    odpc_fit <- convert_rename_comp(odpc_priv(Z = Z, resp=response_full, k_tot_max=2*k_max,
+                                         k1 = k_max, k2 = k_max, num_comp=iter, f_ini = 0,
+                                         passf_ini = FALSE, tol = tol, niter_max = niter_max, method=method_num), wrap=TRUE)
+    odpc_fit <- construct.odpcs(odpc_fit, data=Z, fn_call=match.call())[[1]]
+    
+    final_sparse_fit[[iter]] <- sparse_odpc_path(fit_component=odpc_fit, Z=Z, response=response_full, lambda=lambdas[iter])[[1]]
     response_full <- response_full - fitted(final_sparse_fit[[iter]])
   }
   final_sparse_fit <- construct.odpcs(out=final_sparse_fit, data=Z, fn_call=match.call())

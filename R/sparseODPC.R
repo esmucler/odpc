@@ -145,21 +145,33 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, nlambda=20, window
   final_sparse_fit <- vector(length=length(lambdas), mode='list')
   # TODO test the output of this loop by checking that the mses of the reconsutrctions match
   for (iter in 1:length(lambdas)){
+    if(lambdas[iter]>0){
     odpc_fit <- convert_rename_comp(odpc_priv(Z = Z, resp=response_full, k_tot_max=2*k_max,
                                          k1 = k_max, k2 = k_max, num_comp=iter, f_ini = 0,
                                          passf_ini = FALSE, tol = tol, niter_max = niter_max, method=method_num), wrap=TRUE)
     odpc_fit <- construct.odpcs(odpc_fit, data=Z, fn_call=match.call())[[1]]
     
     final_sparse_fit[[iter]] <- sparse_odpc_path(fit_component=odpc_fit, Z=Z, response=response_full, lambda=lambdas[iter])[[1]]
+    } else {
+      odpc_fit <- convert_rename_comp(odpc_priv(Z = Z, resp=response_full, k_tot_max=2*k_max,
+                                                k1 = k_max, k2 = k_max, num_comp=iter, f_ini = 0,
+                                                passf_ini = FALSE, tol = tol, niter_max = niter_max, method=method_num), wrap=TRUE)
+      odpc_fit <- construct.odpcs(odpc_fit, data=Z, fn_call=match.call())[[1]]
+      odpc_fit$lambda <- 0
+      final_sparse_fit[[iter]] <- odpc_fit
+    }
+    
     response_full <- response_full - fitted(final_sparse_fit[[iter]])
   }
   final_sparse_fit <- construct.odpcs(out=final_sparse_fit, data=Z, fn_call=match.call())
+  print(sapply(final_sparse_fit, function(obj) {obj$lambda}))
   on.exit(stopCluster(cl))
   return(final_sparse_fit)
 }
 
 get_best_sparse_fit <- function(sparse_path, forecasts, Z, h){
   mses <- get_ave_mse_sparse(forecasts=forecasts, Z=Z, h=h)
+  print(mses)
   opt_lambda_ind <- which.min(mses)
   opt_comp <- sparse_path[[opt_lambda_ind]]
   return(list(opt_comp=opt_comp, opt_mse=min(mses)))

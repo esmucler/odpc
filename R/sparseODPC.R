@@ -3,6 +3,7 @@
 #' @param h Forecast horizon.
 #' @param k_max Maximum possible number of lags to use.
 #' @param max_num_comp Maximum possible number of components to compute.
+#' @param nlambda Length of penalty sequence.
 #' @param window_size The size of the rolling window used to estimate the forecasting error.
 #' @param method A string specifying the algorithm used. Options are 'ALS', 'mix' or 'gradient'. See details in \code{\link{odpc}}.
 #' @param tol Relative precision. Default is 1e-4.
@@ -53,7 +54,7 @@
 #' # and a window size of 2 (artificially small to keep computation time low). Use two cores for the
 #' # loop over k, two cores for the loop over the window
 #' fit <- cv.sparse_odpc(x, h=1, k_max = 1, max_num_comp = 1, window_size = 2, ncores = 1)
-cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, method, tol = 1e-04, niter_max = 500, ncores=1) {
+cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, nlambda=20, window_size, method, tol = 1e-04, niter_max = 500, ncores=1) {
   
   if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
           !inherits(Z, "xts"), !inherits(Z, "data.frame"),
@@ -99,7 +100,7 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, metho
   response <- Z_train[(2 * k_max + 1):(nrow(Z_train)),]
   
   odpc_fit <- odpc(Z=Z_train, ks=k_max, method=method, tol=tol, niter_max=niter_max)
-  sparse_path <- sparse_odpc_path(fit_component=odpc_fit[[1]], Z=Z_train, response=response)
+  sparse_path <- sparse_odpc_path(fit_component=odpc_fit[[1]], Z=Z_train, response=response, nlambda=nlambda)
   sparse_path <- lapply(sparse_path, function(fit) {list(fit)})
   
   forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, Z=Z, window_size=window_size, h=h, cl=cl)
@@ -122,7 +123,7 @@ cv.sparse_odpc <- function(Z, h, k_max = 3, max_num_comp = 2, window_size, metho
                                     passf_ini = FALSE, tol = tol, niter_max = niter_max, method=method_num), wrap=TRUE)
     odpc_fit <- construct.odpcs(odpc_fit, data=Z_train, fn_call=match.call())[[1]]
     
-    sparse_path <- sparse_odpc_path(fit_component=odpc_fit, Z=Z_train, response=response_residual)
+    sparse_path <- sparse_odpc_path(fit_component=odpc_fit, Z=Z_train, response=response_residual, nlambda=nlambda)
     sparse_path <- lapply(sparse_path, function(fit) {out <- append(opt_comp, list(fit)); class(out) <- append(class(out), 'odpcs'); return(out)})
     
     forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, Z=Z, window_size=window_size, h=h, cl=cl)
@@ -210,12 +211,12 @@ get_new_comp <- function(a, rolled_data, k_max){
   return(new_comp)
 }
 
-sparse_odpc_path <- function(fit_component, Z, response, lambda=NULL, ...){
+sparse_odpc_path <- function(fit_component, Z, response, nlambda=20, ...){
   N <- nrow(Z)
   k1 <- fit_component$k1
   k2 <- fit_component$k2
   matreg <- getMatrixZj0(Z=Z, k1=k1, k_tot=k1, j=k1)
-  reg_path <- glmnet(y=fit_component$f, x=matreg, nlambda=20, intercept=FALSE, ...)
+  reg_path <- glmnet(y=fit_component$f, x=matreg, nlambda=nlambda, intercept=FALSE, ...)
   lambda_fitted <- reg_path$lambda
   component_path <- predict.glmnet(reg_path, newx=matreg)
   coordinates_path <- coef.glmnet(reg_path)

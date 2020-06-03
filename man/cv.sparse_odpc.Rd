@@ -9,6 +9,7 @@ cv.sparse_odpc(
   h,
   k_max = 3,
   max_num_comp = 2,
+  nlambda = 20,
   window_size,
   method,
   tol = 1e-04,
@@ -24,6 +25,8 @@ cv.sparse_odpc(
 \item{k_max}{Maximum possible number of lags to use.}
 
 \item{max_num_comp}{Maximum possible number of components to compute.}
+
+\item{nlambda}{Length of penalty sequence.}
 
 \item{window_size}{The size of the rolling window used to estimate the forecasting error.}
 

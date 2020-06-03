@@ -190,7 +190,7 @@ forecast_sparse_odpc <- function(fit, rolled_data, h){
   # get components defined using a in fit but data in rolled_data
   new_comps <- sapply(fit, function(fit_component) {get_new_comp(a=fit_component$a, rolled_data=rolled_data, k_max=k_max)})
   # TODO pass ... args to auto.arima
-  fores_comps <- apply(new_comps, 2, function(x, h, ...) { auto <- auto.arima(x)
+  fores_comps <- apply(new_comps, 2, function(x, h, ...) { auto <- auto.arima(x, seasonal=FALSE, approximation=TRUE)
                                                       return(forecast(auto, h)$mean[h])
                                                       }, h)
   new_comps <- rbind(new_comps, fores_comps)
@@ -215,7 +215,7 @@ sparse_odpc_path <- function(fit_component, Z, response, lambda=NULL, ...){
   k1 <- fit_component$k1
   k2 <- fit_component$k2
   matreg <- getMatrixZj0(Z=Z, k1=k1, k_tot=k1, j=k1)
-  reg_path <- glmnet(y=fit_component$f, x=matreg, lambda=lambda, intercept=FALSE, ...)
+  reg_path <- glmnet(y=fit_component$f, x=matreg, nlambda=20, intercept=FALSE, ...)
   lambda_fitted <- reg_path$lambda
   component_path <- predict.glmnet(reg_path, newx=matreg)
   coordinates_path <- coef.glmnet(reg_path)

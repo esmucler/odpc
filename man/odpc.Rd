@@ -81,7 +81,7 @@ Peña D., Smucler E. and Yohai V.J. (2019). “Forecasting Multiple Time Series 
 }
 
 \seealso{
-\code{\link{crit.odpc}}, \code{\link{cv.odpc}}, \code{\link{plot.odpc}}, \code{\link{fitted.odpcs}}, \code{\link{components.odpcs}}, \code{\link{forecast.odpcs}}
+\code{\link{crit.odpc}}, \code{\link{cv.odpc}}, \code{\link{plot.odpc}}, \code{\link{fitted.odpcs}}, \code{\link{components_odpcs}}, \code{\link{forecast.odpcs}}
 }
 \examples{
 T <- 200 #length of series

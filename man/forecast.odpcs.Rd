@@ -45,7 +45,7 @@ forecasts are added to the forecasts described above.
 
 
 \seealso{
-  \code{\link{odpc}}, \code{\link{crit.odpc}}, \code{\link{cv.odpc}}, \code{\link{components.odpcs}}, \code{\link[forecast]{auto.arima}}, \code{\link[forecast]{forecast.Arima}}
+  \code{\link{odpc}}, \code{\link{crit.odpc}}, \code{\link{cv.odpc}}, \code{\link{components_odpcs}}, \code{\link[forecast]{auto.arima}}, \code{\link[forecast]{forecast.Arima}}
 }
 
 \examples{

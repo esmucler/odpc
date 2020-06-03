@@ -128,13 +128,7 @@ construct.odpcs <- function(out, data, fn_call) {
   return(out)
 }
 
-components <- function(object, ...){
-  # Generic function for getting components out of an object
-  UseMethod("components", object)
-}
-
-
-components.odpcs <- function(object, which_comp = 1) {
+components_odpcs <- function(object, which_comp = 1) {
   # This function extracts the desired components from an odpcs object
   #INPUT
   # object: the output of odpc
@@ -192,7 +186,7 @@ forecast.odpcs <- function(object, h, Z = NULL, add_residuals = FALSE, ...){
   # add_residuals: logical? should the forecasts of the residuals be added?
   # ...: further arguments to be passed to auto.arima
   ncomp <- length(object)
-  comps <- components.odpcs(object, 1:ncomp)
+  comps <- components_odpcs(object, 1:ncomp)
   fore <- 0
   
   fores_comps <- lapply(comps, function(x, h, ...) { auto <- auto.arima(x, ...)
@@ -208,9 +202,7 @@ forecast.odpcs <- function(object, h, Z = NULL, add_residuals = FALSE, ...){
   if (add_residuals){
     k1s <- sapply(object, function(x) { return(x$k1) })
     k2s <- sapply(object, function(x) { return(x$k2) })
-    k_tot <- sum(k1s + k2s)
-    k_max <- max(k_tot)
-    residuals <- Z[(k_max + 1):nrow(Z), ] - fitted(object, num_comp = length(object))
+    residuals <- Z[(max(k1s + k2s) + 1):nrow(Z), ] - fitted(object, num_comp = length(object))
     fore_res <- apply(residuals, 2, function(x, h, ...){ 
       auto <- auto.arima(x, ...)
       return(forecast(auto, h)$mean)

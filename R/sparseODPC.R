@@ -191,7 +191,7 @@ forecast_sparse_odpc <- function(fit, rolled_data, h){
   # get components defined using a in fit but data in rolled_data
   new_comps <- sapply(fit, function(fit_component) {get_new_comp(a=fit_component$a, rolled_data=rolled_data, k_max=k_max)})
   # TODO pass ... args to auto.arima
-  fores_comps <- apply(new_comps, 2, function(x, h, ...) { auto <- auto.arima(x, seasonal=FALSE, approximation=TRUE)
+  fores_comps <- apply(new_comps, 2, function(x, h, ...) { auto <- auto.arima(x, seasonal=FALSE, approximation=TRUE, stationary=TRUE)
                                                       return(forecast(auto, h)$mean[h])
                                                       }, h)
   new_comps <- rbind(new_comps, fores_comps)

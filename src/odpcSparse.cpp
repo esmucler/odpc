@@ -36,6 +36,7 @@ void solve_sparse_odpc(const arma::mat & Z,
   
   double obj_ini = 1e10;
   int niter = 0;
+  criter = tol + 1;
   
   getMatrixF(Z, k1, k2, k_tot_max, a, matF);
   

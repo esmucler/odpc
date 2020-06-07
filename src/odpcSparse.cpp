@@ -6,19 +6,9 @@ using namespace arma;
 #include "getMatrices.h"
 #include "sparseAux.h"
 #include "updateFunctions.h"
+#include "miscAux.h"
 
-double getObj(const arma::mat & resp,
-              const arma::mat & Fitted,
-              const arma::vec & a,
-              const double & lambda){
-  
-  int N = resp.n_rows;
-  int m = resp.n_cols;
-  double obj = accu(pow(resp - Fitted, 2)) / (N * m) + lambda * norm(a, 1);
-  return(obj);
-}
-
-// solve_sparse_odpc #solve for one fixed lambda
+// Solve sparse odpc for one fixed lambda
 void solve_sparse_odpc(const arma::mat & Z,
                        const arma::mat & resp,
                        const double & lambda,
@@ -40,12 +30,13 @@ void solve_sparse_odpc(const arma::mat & Z,
                        arma::vec & vecresp,
                        arma::sp_mat & W,
                        arma::mat & Fitted,
+                       double & obj,
+                       double & criter, 
                        bool & conv){
   
-  double obj = 0;
   double obj_ini = 1e10;
   int niter = 0;
-  double criter = tol + 1;
+  
   getMatrixF(Z, k1, k2, k_tot_max, a, matF);
   
   while (niter < niter_max and criter > tol){
@@ -75,12 +66,45 @@ void solve_sparse_odpc(const arma::mat & Z,
   // 
 }
 
-// solve_sparse_odpc_path #solver over a path
-
-// sparse_odpc_priv #put everything together
+// Solve sparse odpc over a grid of lambda values using warm starts
+void solve_sparse_odpc_grid(const arma::mat & Z,
+                             const arma::mat & resp,
+                             const arma::vec & lambda_grid,
+                             const int & k_tot_max,
+                             const int & k1,
+                             const int & k2,
+                             const arma::mat & ident,
+                             const arma::mat & C,
+                             const arma::mat & one,
+                             const double & tol,
+                             const int & niter_max,
+                             arma::mat & WC,
+                             arma::vec & a,
+                             arma::vec & alpha,
+                             arma::mat & B,
+                             arma::mat & D,
+                             arma::mat & matF,
+                             arma::vec & fout,
+                             arma::vec & vecresp,
+                             arma::sp_mat & W,
+                             arma::mat & Fitted,
+                             double & obj,
+                             double & criter,
+                             bool & conv,
+                             arma::field<arma::field<arma::mat>> & ret){
+  
+  int num_lambda =  lambda_grid.n_elem;
+  arma::mat res = zeros(1, 1);
+  for (arma::uword h=0; h < num_lambda; h++){
+    solve_sparse_odpc(Z, resp, lambda_grid[h], k_tot_max, k1, k2, ident, C, one, tol, niter_max, WC, a, alpha,
+                      B, D, matF, fout, vecresp, W, Fitted, obj, criter, conv);
+    ret[h] = process_output(k1, k2, obj, criter, conv, alpha, a, B, res, fout);
+    
+  }
+}
 
 // [[Rcpp::export]]
-arma::field<arma::mat> sparse_odpc_priv(const arma::mat & Z,
+arma::field<arma::field<arma::mat>> sparse_odpc_priv(const arma::mat & Z,
                                         const arma::mat & resp,
                                         const int & k_tot_max,
                                         const int & k1,
@@ -90,7 +114,7 @@ arma::field<arma::mat> sparse_odpc_priv(const arma::mat & Z,
                                         const int & niter_max,
                                         const arma::vec & a_ini,
                                         const arma::mat & D_ini,
-                                        const double & lambda) {
+                                        const arma::vec & lambda_grid) {
   // This function computes a single ODPC with a given number of lags.
   // INPUT
   // Z: data matrix each column is a different time series
@@ -100,22 +124,21 @@ arma::field<arma::mat> sparse_odpc_priv(const arma::mat & Z,
   // k2: number of lags used to reconstruct
   // num_comp: what component is this?
   // k_tot_max: max(k^i1+k^i2)
-  // f_ini: initial estimate of f
-  // passf_ini: logical: is f_ini being passed?
   // tol: relative precision, stopping criterion
   // niter_max: maximum number of iterations
-  // method: 1 =  ALS, 2 = CD in a, LS in B, 3 = GD in A, LS in B
+  // a_ini: starting values for vector to construct the principal component
+  // B_ini: starting values for matrix of loadings corresponding to the principal component
   // OUTPUT
   // k1: number of lags used to define f
   // k2: number of lags used to reconstruct
   // a: vector to construct the principal component
   // alpha: vector of intercepts corresponding to the principal component
   // B: matrix of loadings corresponding to the principal component
-  // mse:  mean squared error
+  // obj:  objective function
   // conv: logical. Did the iterations converge?
   // res: matrix of residuals
   // f: matrix F
-  // criter: last value of 1-mse1/mse0
+  // criter: last value of 1-obj1/obj0
   int N = Z.n_rows;
   int m = Z.n_cols;
   
@@ -141,35 +164,18 @@ arma::field<arma::mat> sparse_odpc_priv(const arma::mat & Z,
   alpha = D.row(0).t();
   B = D.rows(1, k2 + 1);
   bool conv = false;
+  double obj = 0;
+  double criter = tol + 1;
+  int num_lambda =  lambda_grid.n_elem;
+  arma::field<arma::field<arma::mat>> ret(num_lambda);
   
-  solve_sparse_odpc(Z, resp, lambda, k_tot_max, k1, k2, ident, C, one, tol, niter_max, WC, a, alpha,
-                    B, D, matF, fout, vecresp, W, Fitted);
+  solve_sparse_odpc_grid(Z, resp, lambda_grid, k_tot_max, k1,
+                         k2, ident, C, one, tol, niter_max,
+                         WC, a, alpha, B, D, matF, fout,
+                         vecresp, W, Fitted, obj, criter,
+                         conv, ret);
   
-  res = resp - Fitted;
-  // 
-  arma::vec k1_vec = zeros(1);
-  arma::vec k2_vec = zeros(1);
-  arma::vec mse_vec = zeros(1);
-  arma::vec criter_vec = zeros(1);
-  arma::vec conv_vec = zeros(1);
-  k1_vec(0) = k1;
-  k2_vec(0) = k2;
-  // mse_vec(0) = mse;
-  // criter_vec(0) = criter;
-  // conv_vec(0) = conv;
-  // 
-  arma::field<arma::mat> pre_ret(10, 1);
-  // 
-  pre_ret(0, 0) = alpha;
-  pre_ret(1, 0) = B;
-  pre_ret(2, 0) = k2_vec;
-  // pre_ret(3, 0) = mse_vec;
-  // pre_ret(4, 0) = fout;
-  pre_ret(5, 0) = res;
-  pre_ret(6, 0) = k1_vec;
-  // pre_ret(7, 0) = criter_vec;
-  // pre_ret(8, 0) = conv_vec;
-  pre_ret(9, 0) = a;
-  return(pre_ret);
+  
+  return(ret);
 }
 

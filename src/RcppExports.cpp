@@ -130,8 +130,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // sparse_odpc_priv
-arma::field<arma::mat> sparse_odpc_priv(const arma::mat& Z, const arma::mat& resp, const int& k_tot_max, const int& k1, const int& k2, const arma::uword& num_comp, const double& tol, const int& niter_max, const arma::vec& a_ini, const arma::mat& D_ini, const double& lambda);
-RcppExport SEXP _odpc_sparse_odpc_priv(SEXP ZSEXP, SEXP respSEXP, SEXP k_tot_maxSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP num_compSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP a_iniSEXP, SEXP D_iniSEXP, SEXP lambdaSEXP) {
+arma::field<arma::field<arma::mat>> sparse_odpc_priv(const arma::mat& Z, const arma::mat& resp, const int& k_tot_max, const int& k1, const int& k2, const arma::uword& num_comp, const double& tol, const int& niter_max, const arma::vec& a_ini, const arma::mat& D_ini, const arma::vec& lambda_grid);
+RcppExport SEXP _odpc_sparse_odpc_priv(SEXP ZSEXP, SEXP respSEXP, SEXP k_tot_maxSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP num_compSEXP, SEXP tolSEXP, SEXP niter_maxSEXP, SEXP a_iniSEXP, SEXP D_iniSEXP, SEXP lambda_gridSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -145,8 +145,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int& >::type niter_max(niter_maxSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type a_ini(a_iniSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type D_ini(D_iniSEXP);
-    Rcpp::traits::input_parameter< const double& >::type lambda(lambdaSEXP);
-    rcpp_result_gen = Rcpp::wrap(sparse_odpc_priv(Z, resp, k_tot_max, k1, k2, num_comp, tol, niter_max, a_ini, D_ini, lambda));
+    Rcpp::traits::input_parameter< const arma::vec& >::type lambda_grid(lambda_gridSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse_odpc_priv(Z, resp, k_tot_max, k1, k2, num_comp, tol, niter_max, a_ini, D_ini, lambda_grid));
     return rcpp_result_gen;
 END_RCPP
 }

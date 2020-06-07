@@ -1,0 +1,175 @@
+#include <RcppArmadillo.h>
+using namespace Rcpp;
+using namespace arma;
+// [[Rcpp::depends(RcppArmadillo)]]
+#include "config.h"
+#include "getMatrices.h"
+#include "sparseAux.h"
+#include "updateFunctions.h"
+
+double getObj(const arma::mat & resp,
+              const arma::mat & Fitted,
+              const arma::vec & a,
+              const double & lambda){
+  
+  int N = resp.n_rows;
+  int m = resp.n_cols;
+  double obj = accu(pow(resp - Fitted, 2)) / (N * m) + lambda * norm(a, 1);
+  return(obj);
+}
+
+// solve_sparse_odpc #solve for one fixed lambda
+void solve_sparse_odpc(const arma::mat & Z,
+                       const arma::mat & resp,
+                       const double & lambda,
+                       const int & k_tot_max,
+                       const int & k1,
+                       const int & k2,
+                       const arma::mat & ident,
+                       const arma::mat & C,
+                       const arma::mat & one,
+                       const double & tol,
+                       const int & niter_max,
+                       arma::mat & WC,
+                       arma::vec & a,
+                       arma::vec & alpha,
+                       arma::mat & B,
+                       arma::mat & D,
+                       arma::mat & matF,
+                       arma::vec & fout,
+                       arma::vec & vecresp,
+                       arma::sp_mat & W,
+                       arma::mat & Fitted,
+                       bool & conv){
+  
+  double obj = 0;
+  double obj_ini = 1e10;
+  int niter = 0;
+  double criter = tol + 1;
+  getMatrixF(Z, k1, k2, k_tot_max, a, matF);
+  
+  while (niter < niter_max and criter > tol){
+    niter += 1;
+    getVecAMatD_grad(resp, matF, ident, C, one, lambda, WC, a, alpha, B, D, vecresp, W);
+    getMatrixF(Z, k1, k2, k_tot_max, a, matF);
+    Fitted = matF * D;
+    obj = getObj(resp, Fitted, a, lambda);
+    criter = 1 - obj / obj_ini;
+    obj_ini = obj;
+    // if (niter % 2 == 0){
+    //   Rcpp::checkUserInterrupt();
+    // }
+  }
+  
+  // check convergence
+  if (niter < niter_max) {
+    conv = true;
+  }
+  if (k2 > 0) {
+    int N = Z.n_rows;
+    fout(span(0, k2 - 1)) = matF(span(0, k2 - 1), k2 + 1);
+    fout(span(k2, N - (k_tot_max - k2) - 1)) = matF.col(1);
+  } else {
+    fout = matF.col(1);
+  }
+  // 
+}
+
+// solve_sparse_odpc_path #solver over a path
+
+// sparse_odpc_priv #put everything together
+
+// [[Rcpp::export]]
+arma::field<arma::mat> sparse_odpc_priv(const arma::mat & Z,
+                                        const arma::mat & resp,
+                                        const int & k_tot_max,
+                                        const int & k1,
+                                        const int & k2,
+                                        const arma::uword & num_comp,
+                                        const double & tol,
+                                        const int & niter_max,
+                                        const arma::vec & a_ini,
+                                        const arma::mat & D_ini,
+                                        const double & lambda) {
+  // This function computes a single ODPC with a given number of lags.
+  // INPUT
+  // Z: data matrix each column is a different time series
+  // resp: series to be reconstructed; if q components have been computed, this will have
+  // N-k_tot_max, where k_tot_max=max(k^i1+k^i2)
+  // k1: number of lags used to define f
+  // k2: number of lags used to reconstruct
+  // num_comp: what component is this?
+  // k_tot_max: max(k^i1+k^i2)
+  // f_ini: initial estimate of f
+  // passf_ini: logical: is f_ini being passed?
+  // tol: relative precision, stopping criterion
+  // niter_max: maximum number of iterations
+  // method: 1 =  ALS, 2 = CD in a, LS in B, 3 = GD in A, LS in B
+  // OUTPUT
+  // k1: number of lags used to define f
+  // k2: number of lags used to reconstruct
+  // a: vector to construct the principal component
+  // alpha: vector of intercepts corresponding to the principal component
+  // B: matrix of loadings corresponding to the principal component
+  // mse:  mean squared error
+  // conv: logical. Did the iterations converge?
+  // res: matrix of residuals
+  // f: matrix F
+  // criter: last value of 1-mse1/mse0
+  int N = Z.n_rows;
+  int m = Z.n_cols;
+  
+  arma::mat ident = eye(N - k_tot_max, N - k_tot_max);
+  arma::vec vecresp = zeros((N - k_tot_max) * m, 1); //will store vectorise(resp) - alphas
+  arma::vec one = ones(N - k_tot_max, 1);
+  arma::vec alpha = zeros(m, 1);
+  arma::mat res = zeros(N - k_tot_max, m);
+  arma::mat C = zeros((N - k_tot_max) * (k2 + 1), m * (k1 + 1));
+  arma::mat B = zeros(k2 + 1, m);
+  arma::mat D = zeros(k2 + 2, m);
+  arma::mat matF = zeros(N - k_tot_max, k2 + 2);
+  matF.col(0).fill(1); //matF's first column is filled with 0
+  arma::vec fout = zeros(N - (k_tot_max - k2), 1);
+  arma::mat Fitted = zeros(N - k_tot_max, m);
+  arma::sp_mat W = sp_mat(m * (N - k_tot_max), (N - k_tot_max) * (k2 + 1));
+  arma::vec a = zeros(m * (k1 + 1), 1);
+  arma::mat WC = zeros(m * (N - k_tot_max), m * (k2 + 1));
+  
+  C = getMatrixC_forecast(Z, k_tot_max, k1, k2);
+  a = a_ini;
+  D = D_ini;
+  alpha = D.row(0).t();
+  B = D.rows(1, k2 + 1);
+  bool conv = false;
+  
+  solve_sparse_odpc(Z, resp, lambda, k_tot_max, k1, k2, ident, C, one, tol, niter_max, WC, a, alpha,
+                    B, D, matF, fout, vecresp, W, Fitted);
+  
+  res = resp - Fitted;
+  // 
+  arma::vec k1_vec = zeros(1);
+  arma::vec k2_vec = zeros(1);
+  arma::vec mse_vec = zeros(1);
+  arma::vec criter_vec = zeros(1);
+  arma::vec conv_vec = zeros(1);
+  k1_vec(0) = k1;
+  k2_vec(0) = k2;
+  // mse_vec(0) = mse;
+  // criter_vec(0) = criter;
+  // conv_vec(0) = conv;
+  // 
+  arma::field<arma::mat> pre_ret(10, 1);
+  // 
+  pre_ret(0, 0) = alpha;
+  pre_ret(1, 0) = B;
+  pre_ret(2, 0) = k2_vec;
+  // pre_ret(3, 0) = mse_vec;
+  // pre_ret(4, 0) = fout;
+  pre_ret(5, 0) = res;
+  pre_ret(6, 0) = k1_vec;
+  // pre_ret(7, 0) = criter_vec;
+  // pre_ret(8, 0) = conv_vec;
+  pre_ret(9, 0) = a;
+  return(pre_ret);
+}
+

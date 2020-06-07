@@ -33,3 +33,7 @@ roll_odpc <- function(data_field, response_field, k, k_tot_max, num_comp, window
     .Call(`_odpc_roll_odpc`, data_field, response_field, k, k_tot_max, num_comp, window_size, tol, niter_max, method, ncores)
 }
 
+sparse_odpc_priv <- function(Z, resp, k_tot_max, k1, k2, num_comp, tol, niter_max, a_ini, D_ini, lambda) {
+    .Call(`_odpc_sparse_odpc_priv`, Z, resp, k_tot_max, k1, k2, num_comp, tol, niter_max, a_ini, D_ini, lambda)
+}
+

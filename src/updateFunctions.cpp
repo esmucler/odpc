@@ -5,6 +5,7 @@ using namespace arma;
 #include "config.h"
 #include "getMatrices.h"
 #include "updateFunctions.h"
+#include "sparseAux.h"
 
 void getMatrixD(const arma::mat & resp, const arma::mat & F, arma::mat & outD){
   // Get matrix D of loadings and intercepts. First row contains the intercepts (alpha)
@@ -84,6 +85,7 @@ void getVecAMatD_grad(const arma::mat & resp,
                       const arma::mat & ident,
                       const arma::mat & C,
                       const arma::vec & one,
+                      const double & lambda,
                       arma::mat & out_WC,
                       arma::vec & outa,
                       arma::vec & outalpha,
@@ -103,9 +105,13 @@ void getVecAMatD_grad(const arma::mat & resp,
   double step = (0.5) * pow(norm(grad), 2)/pow(norm(out_WC * grad), 2);
   outa = outa - step * grad;
   // outa = outa + 2 * eta * C.t() * W.t() * vecresp - C.t() * W.t() * W * C * outa;
-  double norma = norm(outa);
-  outa /= norma;
-  for (arma::uword i = 1; i < outD.n_rows; i++){
-    outD.row(i) *= norma;
+  if (lambda < 0){
+    double norma = norm(outa);
+    outa /= norma;
+    for (arma::uword i = 1; i < outD.n_rows; i++){
+      outD.row(i) *= norma;
+    }
+  } else {
+    Vector_Soft_Thresholding(lambda * step, outa);
   }
 }

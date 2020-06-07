@@ -5,6 +5,7 @@ using namespace arma;
 #include "config.h"
 #include "getMatrices.h"
 #include "sparseAux.h"
+#include "updateFunctions.h"
 
 void getMatrixD(const arma::mat & resp, const arma::mat & F, arma::mat & outD){
   // Get matrix D of loadings and intercepts. First row contains the intercepts (alpha)
@@ -114,7 +115,6 @@ void getVecAMatD_grad(const arma::mat & resp,
     Vector_Soft_Thresholding(lambda * step, outa);
   }
 }
-
 
 // [[Rcpp::export]]
 double getMSE(const arma::mat & resp,

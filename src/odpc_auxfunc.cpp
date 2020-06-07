@@ -3,6 +3,7 @@ using namespace Rcpp;
 using namespace arma;
 // [[Rcpp::depends(RcppArmadillo)]]
 #include "config.h"
+#include "sparseAux.h"
 
 arma::mat getMatrixZj(const arma::mat & Z, const int & k_tot, const int & j){
   // Get submatrix Zj made up of rows j+1 to N-k_tot+j of Z
@@ -217,17 +218,18 @@ void getVecAMatD(const arma::mat & resp,
 }
 
 void getVecAMatD_grad(const arma::mat & resp,
-                     const arma::mat & matF,
-                     const arma::mat & ident,
-                     const arma::mat & C,
-                     const arma::vec & one,
-                     arma::mat & out_WC,
-                     arma::vec & outa,
-                     arma::vec & outalpha,
-                     arma::mat & outB,
-                     arma::mat & outD,
-                     arma::vec & vecresp,
-                     arma::sp_mat & W){
+                      const arma::mat & matF,
+                      const arma::mat & ident,
+                      const arma::mat & C,
+                      const arma::vec & one,
+                      const double & lambda,
+                      arma::mat & out_WC,
+                      arma::vec & outa,
+                      arma::vec & outalpha,
+                      arma::mat & outB,
+                      arma::mat & outD,
+                      arma::vec & vecresp,
+                      arma::sp_mat & W){
   int k = outD.n_rows - 2;
   getMatrixD(resp, matF, outD);
   // outD = outD + 2 * eta * matF.t() * (resp - matF * outD);
@@ -240,10 +242,14 @@ void getVecAMatD_grad(const arma::mat & resp,
   double step = (0.5) * pow(norm(grad), 2)/pow(norm(out_WC * grad), 2);
   outa = outa - step * grad;
   // outa = outa + 2 * eta * C.t() * W.t() * vecresp - C.t() * W.t() * W * C * outa;
-  double norma = norm(outa);
-  outa /= norma;
-  for (arma::uword i = 1; i < outD.n_rows; i++){
-    outD.row(i) *= norma;
+  if (lambda < 0){
+    double norma = norm(outa);
+    outa /= norma;
+    for (arma::uword i = 1; i < outD.n_rows; i++){
+      outD.row(i) *= norma;
+    }
+  } else {
+    Vector_Soft_Thresholding(lambda * step, outa);
   }
 }
 
@@ -383,7 +389,7 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
     double mse_ini = mse;
     while (niter < niter_max and criter > tol){
       niter += 1;
-      getVecAMatD_grad(resp, matF, ident, C, one, WC, a, alpha, B, D, vecresp, W);
+      getVecAMatD_grad(resp, matF, ident, C, one, -1, WC, a, alpha, B, D, vecresp, W);
       getMatrixF(Z, k1, k2, k_tot_max, a, matF);
       Fitted = matF * D;
       mse = getMSE(resp, Fitted);

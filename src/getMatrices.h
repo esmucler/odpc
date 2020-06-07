@@ -27,4 +27,7 @@ arma::mat getFini_forecast(const arma::mat & Z,
                            const int & k1,
                            const int & k2,
                            const arma::uword & num_comp);
+arma::mat getMatrixF_sparse_forecast(const arma::mat & Z, const int & k1,
+                                     const int & k2, const int & k_tot,
+                                     const arma::vec & a);
 #endif

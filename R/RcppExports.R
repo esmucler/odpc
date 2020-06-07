@@ -13,12 +13,12 @@ getMatrixFitted <- function(f, k1, k2) {
     .Call(`_odpc_getMatrixFitted`, f, k1, k2)
 }
 
-getMatrixF_sparse_forecast <- function(Z, k1, k2, k_tot, a) {
-    .Call(`_odpc_getMatrixF_sparse_forecast`, Z, k1, k2, k_tot, a)
-}
-
 getFini_forecast <- function(Z, resp, k1, k2, num_comp) {
     .Call(`_odpc_getFini_forecast`, Z, resp, k1, k2, num_comp)
+}
+
+getMatrixF_sparse_forecast <- function(Z, k1, k2, k_tot, a) {
+    .Call(`_odpc_getMatrixF_sparse_forecast`, Z, k1, k2, k_tot, a)
 }
 
 getMSE <- function(resp, Fitted) {

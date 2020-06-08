@@ -73,9 +73,7 @@ plot.odpc <- function(x, which = "Component", which_load = 0, ...) {
   # Default is 'Component'
   # which_load: Lag number indicating which loadings should be plotted. 
   # Only used if which = 'Loadings'. Default is 0.
-  if (!is.odpc(x)) {
-    stop("x should be of class odpc")
-  }
+  
   if (!which %in% c("Component", "Loadings")) {
     stop("which should be either Component or Loadings ")
   }
@@ -94,22 +92,9 @@ plot.odpc <- function(x, which = "Component", which_load = 0, ...) {
 
 print.odpc <- function(x, ...) {
   #Print method for the odpc class
-  if (!is.odpc(x)) {
-    stop("x should be of class odpc")
-  }
   y <- list(x)
   class(y) <- c('list', 'odpcs')
   print(y)
-}
-
-is.odpcs <- function(object, ...) {
-  #This function checks whether an object is of class odpcs,
-  #that is, if each of its entries is a list of class odpc
-  if (any(!inherits(object, "odpcs"), !inherits(object, "list"))) {
-    return(FALSE)
-  } else {
-    return(all(sapply(object, is.odpc)))
-  }
 }
 
 construct.odpcs <- function(out, data, fn_call) {
@@ -214,9 +199,6 @@ forecast.odpcs <- function(object, h, Z = NULL, add_residuals = FALSE, ...){
 
 print.odpcs <- function(x, ...) {
   #   Print method for the odpcs class
-  if (!is.odpcs(x)) {
-    stop("x should be of class odpcs")
-  }
   k1s <- sapply(x, function(x){ round(x$k1, 3) })
   k2s <- sapply(x, function(x){ round(x$k2, 3) })
   mses <- sapply(x, function(x){ round(x$mse, 3) })
@@ -313,11 +295,16 @@ convert_rename_window <- function(fits_by_w){
   return(fits_by_w)
 }
 
-convert_rename_comp <- function(comp, wrap=TRUE){
+convert_rename_comp <- function(comp, wrap=TRUE, sparse=FALSE){
   new_comp <- list(alpha=as.numeric(comp[,1][[1]]), B = as.matrix(comp[,1][[2]]), k2 = as.numeric(comp[,1][[3]]),
                    mse = as.numeric(comp[,1][[4]]), f = as.numeric(comp[,1][[5]]), res = as.matrix(comp[,1][[6]]),
                    k1=as.numeric(comp[,1][[7]]), criter=as.numeric(comp[,1][[8]]), conv = as.logical(comp[,1][[9]]),
                    a=as.numeric(comp[,1][[10]]))
+  if (sparse){
+    new_comp$lambda <- as.numeric(comp[,1][[11]])
+    new_comp$obj <- as.numeric(comp[,1][[12]])
+  }
+  
   if(wrap){
     new_comp <- list(new_comp)
   }

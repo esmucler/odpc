@@ -29,3 +29,9 @@ test_that('Equality with stored mse', {
   expect_equal(fit[[1]]$mse, old_mse, tolerance=1e-2)
 })
 
+fit_grad <- odpc(x, ks = c(1), method='gradient')
+old_grad_mse <- 0.8019487
+
+test_that('Equality with stored mse for method gradient', {
+  expect_equal(fit_grad[[1]]$mse, old_grad_mse, tolerance=1e-2)
+})

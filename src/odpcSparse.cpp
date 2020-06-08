@@ -47,7 +47,7 @@ void solve_sparse_odpc(const arma::mat & Z,
     getVecAMatD_grad(resp, matF, ident, C, one, lambda, alpha_en, WC, a, alpha, B, D, vecresp, W);
     getMatrixF(Z, k1, k2, k_tot_max, a, matF);
     Fitted = matF * D;
-    obj = getObj(resp, Fitted, a, lambda);
+    obj = getObj(resp, Fitted, a, lambda, alpha_en);
     criter = 1 - obj / obj_ini;
     obj_ini = obj;
     // if (niter % 2 == 0){

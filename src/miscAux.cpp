@@ -24,12 +24,12 @@ double getMSE(const arma::mat & resp,
 double getObj(const arma::mat & resp,
               const arma::mat & Fitted,
               const arma::vec & a,
-              const double & lambda){
+              const double & lambda,
+              const double & alpha_en){
   
   int N = resp.n_rows;
   int m = resp.n_cols;
-  double alpha = 0.95;
-  double obj = getMSE(resp, Fitted) + lambda * alpha * norm(a, 1) + lambda * (1-alpha) * 0.5 * pow(norm(a, 2),2);
+  double obj = getMSE(resp, Fitted) + lambda * alpha_en * norm(a, 1) + lambda * (1-alpha_en) * 0.5 * pow(norm(a, 2),2);
   return(obj);
 }
 

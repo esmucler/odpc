@@ -130,8 +130,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // sparse_odpc_priv
-arma::field<arma::field<arma::mat>> sparse_odpc_priv(const arma::mat& Z, const arma::mat& resp, const int& k_tot_max, const int& k1, const int& k2, const double& tol, const double& eps, const int& niter_max, const arma::vec& a_ini, const arma::mat& D_ini, const int& num_lambda_in, const bool& pass_grid, const arma::vec& lambda_grid_in);
-RcppExport SEXP _odpc_sparse_odpc_priv(SEXP ZSEXP, SEXP respSEXP, SEXP k_tot_maxSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP tolSEXP, SEXP epsSEXP, SEXP niter_maxSEXP, SEXP a_iniSEXP, SEXP D_iniSEXP, SEXP num_lambda_inSEXP, SEXP pass_gridSEXP, SEXP lambda_grid_inSEXP) {
+arma::field<arma::field<arma::mat>> sparse_odpc_priv(const arma::mat& Z, const arma::mat& resp, const int& k_tot_max, const int& k1, const int& k2, const double& tol, const double& eps, const int& niter_max, const arma::vec& a_ini, const arma::mat& D_ini, const int& num_lambda_in, const bool& pass_grid, const arma::vec& lambda_grid_in, const double& alpha_en);
+RcppExport SEXP _odpc_sparse_odpc_priv(SEXP ZSEXP, SEXP respSEXP, SEXP k_tot_maxSEXP, SEXP k1SEXP, SEXP k2SEXP, SEXP tolSEXP, SEXP epsSEXP, SEXP niter_maxSEXP, SEXP a_iniSEXP, SEXP D_iniSEXP, SEXP num_lambda_inSEXP, SEXP pass_gridSEXP, SEXP lambda_grid_inSEXP, SEXP alpha_enSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -148,7 +148,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int& >::type num_lambda_in(num_lambda_inSEXP);
     Rcpp::traits::input_parameter< const bool& >::type pass_grid(pass_gridSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type lambda_grid_in(lambda_grid_inSEXP);
-    rcpp_result_gen = Rcpp::wrap(sparse_odpc_priv(Z, resp, k_tot_max, k1, k2, tol, eps, niter_max, a_ini, D_ini, num_lambda_in, pass_grid, lambda_grid_in));
+    Rcpp::traits::input_parameter< const double& >::type alpha_en(alpha_enSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse_odpc_priv(Z, resp, k_tot_max, k1, k2, tol, eps, niter_max, a_ini, D_ini, num_lambda_in, pass_grid, lambda_grid_in, alpha_en));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -162,7 +163,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_odpc_getMSE", (DL_FUNC) &_odpc_getMSE, 2},
     {"_odpc_odpc_priv", (DL_FUNC) &_odpc_odpc_priv, 11},
     {"_odpc_roll_odpc", (DL_FUNC) &_odpc_roll_odpc, 10},
-    {"_odpc_sparse_odpc_priv", (DL_FUNC) &_odpc_sparse_odpc_priv, 13},
+    {"_odpc_sparse_odpc_priv", (DL_FUNC) &_odpc_sparse_odpc_priv, 14},
     {NULL, NULL, 0}
 };
 

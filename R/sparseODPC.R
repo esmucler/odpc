@@ -3,6 +3,7 @@
 #' @param h Forecast horizon.
 #' @param k_list List of values of k to choose from.
 #' @param nlambda Length of penalty sequence.
+#' @param alpha_en Between 0 and 1, elastic net
 #' @param window_size The size of the rolling window used to estimate the forecasting error.
 #' @param tol Relative precision. Default is 1e-4.
 #' @param niter_max Integer. Maximum number of iterations. Default is 500.
@@ -53,7 +54,7 @@
 #' # and a window size of 2 (artificially small to keep computation time low). Use two cores for the
 #' # loop over k, two cores for the loop over the window
 #' fit <- cv.sparse_odpc(x, h=1, k_list = 1, window_size = 2, ncores = 1)
-cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, window_size, tol = 1e-04, niter_max = 500, eps=1e-3, ncores=1) {
+cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, alpha_en=0.95, window_size, tol = 1e-04, niter_max = 500, eps=1e-3, ncores=1) {
   
   if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
           !inherits(Z, "xts"), !inherits(Z, "data.frame"),
@@ -92,6 +93,7 @@ cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, window_size, tol = 1e
   sparse_path <- sparse_odpc_priv(Z=Z_train,
                                   resp=response,
                                   num_lambda_in=nlambda,
+                                  alpha_en=alpha_en,
                                   a_ini=odpc_fit[[1]]$a,
                                   D_ini=rbind(odpc_fit[[1]]$alpha, odpc_fit[[1]]$B),
                                   k_tot_max=k1+k2,
@@ -122,6 +124,7 @@ cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, window_size, tol = 1e
   final_fit <- sparse_odpc_priv(Z=Z,
                                 resp=response_full,
                                 num_lambda_in=0,
+                                alpha_en=alpha_en,
                                 a_ini=odpc_fit[[1]]$a,
                                 D_ini=rbind(odpc_fit[[1]]$alpha, odpc_fit[[1]]$B),
                                 k_tot_max=k1+k2,

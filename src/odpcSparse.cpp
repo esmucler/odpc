@@ -12,6 +12,7 @@ using namespace arma;
 void solve_sparse_odpc(const arma::mat & Z,
                        const arma::mat & resp,
                        const double & lambda,
+                       const double & alpha_en,
                        const int & k_tot_max,
                        const int & k1,
                        const int & k2,
@@ -43,7 +44,7 @@ void solve_sparse_odpc(const arma::mat & Z,
   
   while (niter < niter_max and criter > tol){
     niter += 1;
-    getVecAMatD_grad(resp, matF, ident, C, one, lambda, WC, a, alpha, B, D, vecresp, W);
+    getVecAMatD_grad(resp, matF, ident, C, one, lambda, alpha_en, WC, a, alpha, B, D, vecresp, W);
     getMatrixF(Z, k1, k2, k_tot_max, a, matF);
     Fitted = matF * D;
     obj = getObj(resp, Fitted, a, lambda);
@@ -71,6 +72,7 @@ void solve_sparse_odpc(const arma::mat & Z,
 void solve_sparse_odpc_grid(const arma::mat & Z,
                              const arma::mat & resp,
                              const arma::vec & lambda_grid,
+                             const double & alpha_en,
                              const int & k_tot_max,
                              const int & k1,
                              const int & k2,
@@ -98,7 +100,7 @@ void solve_sparse_odpc_grid(const arma::mat & Z,
   int num_lambda =  ret.n_elem;
   arma::mat res = zeros(1, 1);
   for (arma::uword h=0; h < num_lambda; h++){
-    solve_sparse_odpc(Z, resp, lambda_grid[h], k_tot_max, k1, k2, ident, C, one, tol, niter_max, WC, a, alpha,
+    solve_sparse_odpc(Z, resp, lambda_grid[h], alpha_en, k_tot_max, k1, k2, ident, C, one, tol, niter_max, WC, a, alpha,
                       B, D, matF, fout, vecresp, W, Fitted, obj, criter, conv, mse);
     ret[h] = process_output(k1, k2, obj, criter, conv, alpha, a, B, res, fout, lambda_grid[h], mse);
     
@@ -118,7 +120,8 @@ arma::field<arma::field<arma::mat>> sparse_odpc_priv(const arma::mat & Z,
                                         const arma::mat & D_ini,
                                         const int & num_lambda_in,
                                         const bool & pass_grid,
-                                        const arma::vec & lambda_grid_in) {
+                                        const arma::vec & lambda_grid_in,
+                                        const double & alpha_en) {
   // This function computes a single sparse ODPC with a given number of lags.
   // INPUT
   // Z: data matrix each column is a different time series
@@ -182,7 +185,7 @@ arma::field<arma::field<arma::mat>> sparse_odpc_priv(const arma::mat & Z,
     arma::vec lambda_grid = exp(linspace(log(eps * lambda_max), log(lambda_max), num_lambda_in));
     
     arma::field<arma::field<arma::mat>> ret(num_lambda_in);
-    solve_sparse_odpc_grid(Z, resp, lambda_grid, k_tot_max, k1,
+    solve_sparse_odpc_grid(Z, resp, lambda_grid, alpha_en, k_tot_max, k1,
                            k2, ident, C, one, tol, niter_max,
                            WC, a, alpha, B, D, matF, fout,
                            vecresp, W, Fitted, obj, criter,
@@ -192,7 +195,7 @@ arma::field<arma::field<arma::mat>> sparse_odpc_priv(const arma::mat & Z,
   } else {
     int n_lambda = lambda_grid_in.n_elem;
     arma::field<arma::field<arma::mat>> ret(n_lambda);
-    solve_sparse_odpc_grid(Z, resp, lambda_grid_in, k_tot_max, k1,
+    solve_sparse_odpc_grid(Z, resp, lambda_grid_in, alpha_en, k_tot_max, k1,
                            k2, ident, C, one, tol, niter_max,
                            WC, a, alpha, B, D, matF, fout,
                            vecresp, W, Fitted, obj, criter,

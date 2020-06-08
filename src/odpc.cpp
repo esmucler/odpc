@@ -126,7 +126,7 @@ arma::field<arma::mat> odpc_priv(const arma::mat & Z,
     double mse_ini = mse;
     while (niter < niter_max and criter > tol){
       niter += 1;
-      getVecAMatD_grad(resp, matF, ident, C, one, -1, WC, a, alpha, B, D, vecresp, W);
+      getVecAMatD_grad(resp, matF, ident, C, one, -1, -1, WC, a, alpha, B, D, vecresp, W);
       getMatrixF(Z, k1, k2, k_tot_max, a, matF);
       Fitted = matF * D;
       mse = getMSE(resp, Fitted);

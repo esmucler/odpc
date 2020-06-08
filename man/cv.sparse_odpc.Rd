@@ -9,6 +9,7 @@ cv.sparse_odpc(
   h,
   k_list = 1:3,
   nlambda = 20,
+  alpha_en = 0.95,
   window_size,
   tol = 1e-04,
   niter_max = 500,
@@ -24,6 +25,8 @@ cv.sparse_odpc(
 \item{k_list}{List of values of k to choose from.}
 
 \item{nlambda}{Length of penalty sequence.}
+
+\item{alpha_en}{Between 0 and 1, elastic net}
 
 \item{window_size}{The size of the rolling window used to estimate the forecasting error.}
 

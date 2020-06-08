@@ -86,6 +86,7 @@ void getVecAMatD_grad(const arma::mat & resp,
                       const arma::mat & C,
                       const arma::vec & one,
                       const double & lambda,
+                      const double & alpha_en,
                       arma::mat & out_WC,
                       arma::vec & outa,
                       arma::vec & outalpha,
@@ -113,8 +114,7 @@ void getVecAMatD_grad(const arma::mat & resp,
       outD.row(i) *= norma;
     }
   } else {
-    double alpha = 0.95;
-    Vector_Soft_Thresholding(lambda * step * alpha, outa);
-    outa = outa * 1/(1+lambda * (1-alpha));
+    Vector_Soft_Thresholding(lambda * step * alpha_en, outa);
+    outa = outa * 1/(1+lambda * (1-alpha_en));
   }
 }

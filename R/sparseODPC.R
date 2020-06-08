@@ -121,22 +121,26 @@ cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, alpha_en=0.95, window
   print('lambda')
   print(new_opt_lambda)
   response_full <- Z[(k_tot_max + 1):(nrow(Z)),]
-  final_fit <- sparse_odpc_priv(Z=Z,
-                                resp=response_full,
-                                num_lambda_in=0,
-                                alpha_en=alpha_en,
-                                a_ini=odpc_fit[[1]]$a,
-                                D_ini=rbind(odpc_fit[[1]]$alpha, odpc_fit[[1]]$B),
-                                k_tot_max=k1+k2,
-                                k1=k1,
-                                k2=k2,
-                                tol=tol,
-                                eps=eps,
-                                niter_max=niter_max,
-                                pass_grid=TRUE,
-                                lambda_grid_in=c(new_opt_lambda))
-  final_fit <- convert_rename_comp(final_fit[[1]], wrap=TRUE, sparse=TRUE)
-  final_fit <- construct.odpcs(final_fit, data=Z, fn_call=match.call())
+  if(new_opt_lambda > 0){
+    final_fit <- sparse_odpc_priv(Z=Z,
+                                  resp=response_full,
+                                  num_lambda_in=0,
+                                  alpha_en=alpha_en,
+                                  a_ini=opt_comp[[1]]$a,
+                                  D_ini=rbind(opt_comp[[1]]$alpha, opt_comp[[1]]$B),
+                                  k_tot_max=k1+k2,
+                                  k1=k1,
+                                  k2=k2,
+                                  tol=tol,
+                                  eps=eps,
+                                  niter_max=niter_max,
+                                  pass_grid=TRUE,
+                                  lambda_grid_in=c(new_opt_lambda))
+    final_fit <- convert_rename_comp(final_fit[[1]], wrap=TRUE, sparse=TRUE)
+    final_fit <- construct.odpcs(final_fit, data=Z, fn_call=match.call())
+  } else {
+    final_fit <- crit.odpc(Z=Z, k_list=opt_comp[[1]]$k1, tol=tol, niter_max=niter_max, ncores=ncores)
+  }
   
   on.exit(stopCluster(cl))
   return(final_fit)

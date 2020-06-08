@@ -16,7 +16,7 @@ Description: Functions to compute the one-sided dynamic
 	that minimize the reconstruction mean squared error.
 License: GPL (>= 2)
 Biarch: true
-Imports: methods, Rcpp (>= 0.12.7), forecast, parallel, doParallel, foreach, glmnet, MASS
+Imports: methods, Rcpp (>= 0.12.7), forecast, parallel, doParallel, foreach, MASS
 LinkingTo: Rcpp, RcppArmadillo (>= 0.7.500.0.0)
 Suggests: testthat
 Depends:

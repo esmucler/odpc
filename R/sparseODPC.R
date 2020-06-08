@@ -8,7 +8,6 @@
 #' @param niter_max Integer. Maximum number of iterations. Default is 500.
 #' @param eps Between 0 and 1, used to build penalty sequence
 #' @param ncores Number of cores to parallelise over.
-#' @param ... Additional parameters passed to auto.arima.
 
 
 
@@ -54,7 +53,7 @@
 #' # and a window size of 2 (artificially small to keep computation time low). Use two cores for the
 #' # loop over k, two cores for the loop over the window
 #' fit <- cv.sparse_odpc(x, h=1, k_list = 1, window_size = 2, ncores = 1)
-cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, window_size, tol = 1e-04, niter_max = 500, eps=1e-3, ncores=1, ...) {
+cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, window_size, tol = 1e-04, niter_max = 500, eps=1e-3, ncores=1) {
   
   if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
           !inherits(Z, "xts"), !inherits(Z, "data.frame"),
@@ -111,7 +110,7 @@ cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, window_size, tol = 1e
   sparse_path <- lapply(sparse_path, function(fit) {construct.odpcs(fit, Z, fn_call=match.call())})
   
   # TODO test is.odpc this
-  forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, Z=Z, window_size=window_size, h=h, cl=cl, ...)
+  forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, Z=Z, window_size=window_size, h=h, cl=cl)
   best_fit <- get_best_sparse_fit(forecasts=forecasts, sparse_path=sparse_path, Z=Z, h=h)
 
   opt_comp <- best_fit$opt_comp
@@ -152,28 +151,28 @@ get_ave_mse_sparse <- function(forecasts, Z, h){
   mses <- apply(mses_per_window, 1, mean)
 }
 
-forecast_sparse_rolled <- function(sparse_path, Z, window_size, h, cl, ...){
+forecast_sparse_rolled <- function(sparse_path, Z, window_size, h, cl){
   N <- nrow(Z)
-  forecasts <- parLapply(cl=cl, X=1:window_size, fun=function(w) {forecast_sparse_path(sparse_path=sparse_path, rolled_data=Z[1:(N - h - w + 1),], h=h, ...)})
+  forecasts <- parLapply(cl=cl, X=1:window_size, fun=function(w) {forecast_sparse_path(sparse_path=sparse_path, rolled_data=Z[1:(N - h - w + 1),], h=h)})
   return(forecasts)
 }
 
-forecast_sparse_path <- function(sparse_path, rolled_data, h, ...){
+forecast_sparse_path <- function(sparse_path, rolled_data, h){
   # each column is a different lambda
-  forecasts <- sapply(sparse_path, function(fit) {forecast_sparse_odpc(fit=fit, rolled_data=rolled_data, h=h, ...)})
+  forecasts <- sapply(sparse_path, function(fit) {forecast_sparse_odpc(fit=fit, rolled_data=rolled_data, h=h)})
   return(forecasts)
 }
 
-forecast_sparse_odpc <- function(fit, rolled_data, h, ...){
+forecast_sparse_odpc <- function(fit, rolled_data, h){
   ncomp <- length(fit)
   fore <- 0
   # sparse fits have the same k1 and k2 in all components
   k_max <- fit[[1]]$k1
   # get components defined using a in fit but data in rolled_data
   new_comps <- sapply(fit, function(fit_component) {get_new_comp(a=fit_component$a, rolled_data=rolled_data, k_max=k_max)})
-  fores_comps <- apply(new_comps, 2, function(x, h, ...) { auto <- auto.arima(x, ...)
+  fores_comps <- apply(new_comps, 2, function(x, h) { auto <- auto.arima(x, stationary=TRUE, seasonal=FALSE, approximation=TRUE)
                                                       return(forecast(auto, h)$mean[h])
-                                                      }, h, ...)
+                                                      }, h)
   new_comps <- rbind(new_comps, fores_comps)
   for (i in 1:ncomp){
     matF <- getMatrixFore(f=new_comps[, i], k2=k_max, h=h)

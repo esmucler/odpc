@@ -28,7 +28,7 @@ double getObj(const arma::mat & resp,
   
   int N = resp.n_rows;
   int m = resp.n_cols;
-  double obj = getMSE(resp, Fitted) + lambda * norm(a, 1);
+  double obj = 0.5 * accu(pow(resp - Fitted, 2)) + lambda * norm(a, 1);
   return(obj);
 }
 

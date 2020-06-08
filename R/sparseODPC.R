@@ -116,6 +116,8 @@ cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, window_size, tol = 1e
   opt_comp <- best_fit$opt_comp
   new_best_mse <- best_fit$opt_mse
   new_opt_lambda <- opt_comp[[1]]$lambda
+  print('lambda')
+  print(new_opt_lambda)
   response_full <- Z[(k_tot_max + 1):(nrow(Z)),]
   final_fit <- sparse_odpc_priv(Z=Z,
                                 resp=response_full,

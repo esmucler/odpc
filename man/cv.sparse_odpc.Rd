@@ -7,14 +7,14 @@
 cv.sparse_odpc(
   Z,
   h,
-  k_max = 3,
-  max_num_comp = 2,
+  k_list = 1:3,
   nlambda = 20,
   window_size,
-  method,
   tol = 1e-04,
   niter_max = 500,
-  ncores = 1
+  eps = 0.001,
+  ncores = 1,
+  ...
 )
 }
 \arguments{
@@ -22,21 +22,21 @@ cv.sparse_odpc(
 
 \item{h}{Forecast horizon.}
 
-\item{k_max}{Maximum possible number of lags to use.}
-
-\item{max_num_comp}{Maximum possible number of components to compute.}
+\item{k_list}{List of values of k to choose from.}
 
 \item{nlambda}{Length of penalty sequence.}
 
 \item{window_size}{The size of the rolling window used to estimate the forecasting error.}
 
-\item{method}{A string specifying the algorithm used. Options are 'ALS', 'mix' or 'gradient'. See details in \code{\link{odpc}}.}
-
 \item{tol}{Relative precision. Default is 1e-4.}
 
 \item{niter_max}{Integer. Maximum number of iterations. Default is 500.}
 
+\item{eps}{Between 0 and 1, used to build penalty sequence}
+
 \item{ncores}{Number of cores to parallelise over.}
+
+\item{...}{Additional parameters passed to auto.arima.}
 }
 \value{
 An object of class odpcs, that is, a list of length equal to the number of computed components, each computed using the optimal value of k. 
@@ -73,7 +73,7 @@ for (i in 1:m) {
 # Choose parameters to perform a one step ahead forecast. Use 1 or 2 lags, only one component 
 # and a window size of 2 (artificially small to keep computation time low). Use two cores for the
 # loop over k, two cores for the loop over the window
-fit <- cv.sparse_odpc(x, h=1, k_max = 1, max_num_comp = 1, window_size = 2, ncores = 1)
+fit <- cv.sparse_odpc(x, h=1, k_list = 1, window_size = 2, ncores = 1)
 }
 \references{
 Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Available at https://arxiv.org/abs/1708.04705.

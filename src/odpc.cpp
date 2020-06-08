@@ -6,23 +6,7 @@ using namespace arma;
 #include "getMatrices.h"
 #include "sparseAux.h"
 #include "updateFunctions.h"
-
-// [[Rcpp::export]]
-double getMSE(const arma::mat & resp,
-              const arma::mat & Fitted){
-  // Get MSE of the reconstruction of resp by Fitted
-  // INPUT
-  // resp: matrix ot be reconstructed
-  // Fitted: matrix of fitted values
-  // OUTPUT
-  // mse: mean squared error
-  int N = resp.n_rows;
-  int m = resp.n_cols;
-  double mse = accu(pow(resp - Fitted, 2));
-  mse /= (N * m);
-  return(mse);
-}
-
+#include "miscAux.h"
 
 // [[Rcpp::export]]
 arma::field<arma::mat> odpc_priv(const arma::mat & Z,

@@ -16,9 +16,13 @@ arma::field<arma::mat> process_output(const int & k1,
                                       const arma::vec & a,
                                       const arma::mat & B,
                                       const arma::mat & res,
-                                      const arma::vec & fout);
+                                      const arma::vec & fout,
+                                      const double & lambda,
+                                      const double & mse);
 double getObj(const arma::mat & resp,
               const arma::mat & Fitted,
               const arma::vec & a,
               const double & lambda);
+double getMSE(const arma::mat & resp,
+              const arma::mat & Fitted);
 #endif

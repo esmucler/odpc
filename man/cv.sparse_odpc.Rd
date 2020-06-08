@@ -13,8 +13,7 @@ cv.sparse_odpc(
   tol = 1e-04,
   niter_max = 500,
   eps = 0.001,
-  ncores = 1,
-  ...
+  ncores = 1
 )
 }
 \arguments{
@@ -35,8 +34,6 @@ cv.sparse_odpc(
 \item{eps}{Between 0 and 1, used to build penalty sequence}
 
 \item{ncores}{Number of cores to parallelise over.}
-
-\item{...}{Additional parameters passed to auto.arima.}
 }
 \value{
 An object of class odpcs, that is, a list of length equal to the number of computed components, each computed using the optimal value of k. 

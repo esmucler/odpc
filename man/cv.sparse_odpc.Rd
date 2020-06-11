@@ -11,6 +11,7 @@ cv.sparse_odpc(
   nlambda = 20,
   alpha_en = 0.95,
   window_size,
+  ks,
   tol = 1e-04,
   niter_max = 500,
   eps = 0.001,
@@ -29,6 +30,8 @@ cv.sparse_odpc(
 \item{alpha_en}{Between 0 and 1, elastic net}
 
 \item{window_size}{The size of the rolling window used to estimate the forecasting error.}
+
+\item{ks}{Optional, number of lags to use.}
 
 \item{tol}{Relative precision. Default is 1e-4.}
 

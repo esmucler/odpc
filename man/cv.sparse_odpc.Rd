@@ -9,7 +9,7 @@ cv.sparse_odpc(
   h,
   k_list = 1:3,
   nlambda = 20,
-  alpha_en = 0.95,
+  alpha_en = 1,
   window_size,
   ks,
   tol = 1e-04,

@@ -55,7 +55,7 @@
 #' # and a window size of 2 (artificially small to keep computation time low). Use two cores for the
 #' # loop over k, two cores for the loop over the window
 #' fit <- cv.sparse_odpc(x, h=1, k_list = 1, window_size = 2, ncores = 1)
-cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, alpha_en=0.95, window_size, ks, tol = 1e-04, niter_max = 500, eps=1e-3, ncores=1) {
+cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, alpha_en=1, window_size, ks, tol = 1e-04, niter_max = 500, eps=1e-3, ncores=1) {
   
   if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
           !inherits(Z, "xts"), !inherits(Z, "data.frame"),

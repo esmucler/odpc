@@ -200,7 +200,7 @@ cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, alpha_en=0.95, window
       final_fit <- convert_rename_comp(final_fit[[1]], wrap=TRUE, sparse=TRUE)
       final_fit <- construct.odpcs(final_fit, data=Z, fn_call=match.call())
     } else {
-      final_fit <- odpc(Z=Z_train, ks=ks, tol=tol, niter_max=niter_max)
+      final_fit <- odpc(Z=Z, ks=ks, tol=tol, niter_max=niter_max)
     }
   }
   

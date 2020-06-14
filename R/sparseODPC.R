@@ -121,8 +121,7 @@ cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, alpha_en=1, window_si
     opt_comp <- best_fit$opt_comp
     new_best_mse <- best_fit$opt_mse
     new_opt_lambda <- opt_comp[[1]]$lambda
-    print('lambda')
-    print(new_opt_lambda)
+    
     response_full <- Z[(k_tot_max + 1):(nrow(Z)),]
     if(new_opt_lambda > 0){
       final_fit <- sparse_odpc_priv(Z=Z,
@@ -179,8 +178,7 @@ cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, alpha_en=1, window_si
     opt_comp <- best_fit$opt_comp
     new_best_mse <- best_fit$opt_mse
     new_opt_lambda <- opt_comp[[1]]$lambda
-    print('lambda')
-    print(new_opt_lambda)
+    
     response_full <- Z[(k_tot_max + 1):(nrow(Z)),]
     if(new_opt_lambda > 0){
       final_fit <- sparse_odpc_priv(Z=Z,
@@ -210,7 +208,6 @@ cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, alpha_en=1, window_si
 
 get_best_sparse_fit <- function(sparse_path, forecasts, Z, h){
   mses <- get_ave_mse_sparse(forecasts=forecasts, Z=Z, h=h)
-  print(mses)
   opt_lambda_ind <- which.min(mses)
   opt_comp <- sparse_path[[opt_lambda_ind]]
   return(list(opt_comp=opt_comp, opt_mse=min(mses)))
@@ -249,7 +246,7 @@ forecast_sparse_odpc <- function(fit, rolled_data, h){
     matF <- getMatrixFore(f=new_comps[, i], k2=k_max, h=h)
     fore <- fore + matF %*% rbind(as.vector(fit[[i]]$alpha), as.matrix(fit[[i]]$B))
   }
-  return(fore)
+  return(fore[h,])
 }
 
 get_new_comp <- function(a, rolled_data, k_max){

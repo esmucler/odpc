@@ -179,8 +179,11 @@ arma::field<arma::field<arma::mat>> sparse_odpc_priv(const arma::mat & Z,
     vecresp = vectorise(resp) - kron(alpha, ident) * one;
     W = kron(B.t(), ident);
     WC = W * C;
-    double WC_norm =  pow(norm(WC), 2);
-    lambda_max = 1/alpha_en * max(abs(vecresp.t() * WC)) / WC_norm;
+    arma::vec corrs = zeros(WC.n_cols);
+    for (arma::uword h=0; h< WC.n_cols; h++ ){
+      corrs[h] = dot(WC.col(h), vecresp)/pow(norm(WC.col(h)), 2);
+    }
+    lambda_max = 1/alpha_en * max(abs(corrs));
     arma::vec lambda_grid = exp(linspace(log(eps * lambda_max), log(lambda_max), num_lambda_in));
     
     arma::field<arma::field<arma::mat>> ret(num_lambda_in);

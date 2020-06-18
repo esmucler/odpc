@@ -2,6 +2,7 @@
 #' @param Z Data matrix. Each column is a different time series.
 #' @param h Forecast horizon.
 #' @param k_list List of values of k to choose from.
+#' @param max_num_comp Maximum possible number of components to compute.
 #' @param nlambda Length of penalty sequence.
 #' @param alpha_en Between 0 and 1, elastic net
 #' @param window_size The size of the rolling window used to estimate the forecasting error.
@@ -55,7 +56,7 @@
 #' # and a window size of 2 (artificially small to keep computation time low). Use two cores for the
 #' # loop over k, two cores for the loop over the window
 #' fit <- cv.sparse_odpc(x, h=1, k_list = 1, window_size = 2, ncores = 1)
-cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, alpha_en=1, window_size, ks, tol = 1e-04, niter_max = 500, eps=1e-3, ncores=1) {
+cv.sparse_odpc <- function(Z, h, k_list = 1:3, max_num_comp=1, nlambda=20, alpha_en=1, window_size, ks, tol = 1e-04, niter_max = 500, eps=1e-3, ncores=1) {
   
   if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
           !inherits(Z, "xts"), !inherits(Z, "data.frame"),
@@ -85,136 +86,49 @@ cv.sparse_odpc <- function(Z, h, k_list = 1:3, nlambda=20, alpha_en=1, window_si
   
   Z_train <- Z[1:(nrow(Z) - window_size),]
   
-  
   if (missing(ks)){
-    odpc_fit <- crit.odpc(Z=Z_train, k_list=k_list, tol=tol, niter_max=niter_max, ncores=ncores)
+    odpc_fit <- crit.odpc(Z=Z_train, max_num_comp=max_num_comp, k_list=k_list, tol=tol, niter_max=niter_max, ncores=ncores)
+    num_comp_total <- length(odpc_fit)
     k1 <- odpc_fit[[1]]$k1
     k2 <- odpc_fit[[1]]$k2
     k_tot_max <- k1 + k2
-    response <- Z_train[(k_tot_max + 1):(nrow(Z_train)),]
-    
-    sparse_path <- sparse_odpc_priv(Z=Z_train,
-                                    resp=response,
-                                    num_lambda_in=nlambda,
-                                    alpha_en=alpha_en,
-                                    a_ini=odpc_fit[[1]]$a,
-                                    D_ini=rbind(odpc_fit[[1]]$alpha, odpc_fit[[1]]$B),
-                                    k_tot_max=k1+k2,
-                                    k1=k1,
-                                    k2=k2,
-                                    tol=tol,
-                                    eps=eps,
-                                    niter_max=niter_max,
-                                    pass_grid=FALSE,
-                                    lambda_grid_in=c(0))
-    
-    sparse_path <- lapply(sparse_path, function(fit) {convert_rename_comp(fit, wrap=TRUE, sparse=TRUE)})
-    # append original fit to the beginning of the path
-    odpc_fit[[1]]$lambda <- 0
-    sparse_path <- append(sparse_path, list(odpc_fit), after=0)
-    sparse_path <- lapply(sparse_path, function(fit) {construct.odpcs(fit, Z, fn_call=match.call())})
-    
-    # TODO test is.odpc this
-    forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, Z=Z, window_size=window_size, h=h, cl=cl)
-    best_fit <- get_best_sparse_fit(forecasts=forecasts, sparse_path=sparse_path, Z=Z, h=h)
-  
-    opt_comp <- best_fit$opt_comp
-    new_best_mse <- best_fit$opt_mse
-    new_opt_lambda <- opt_comp[[1]]$lambda
-    
-    response_full <- Z[(k_tot_max + 1):(nrow(Z)),]
-    if(new_opt_lambda > 0){
-      final_fit <- sparse_odpc_priv(Z=Z,
-                                    resp=response_full,
-                                    num_lambda_in=0,
-                                    alpha_en=alpha_en,
-                                    a_ini=opt_comp[[1]]$a,
-                                    D_ini=rbind(opt_comp[[1]]$alpha, opt_comp[[1]]$B),
-                                    k_tot_max=k1+k2,
-                                    k1=k1,
-                                    k2=k2,
-                                    tol=tol,
-                                    eps=eps,
-                                    niter_max=niter_max,
-                                    pass_grid=TRUE,
-                                    lambda_grid_in=c(new_opt_lambda))
-      final_fit <- convert_rename_comp(final_fit[[1]], wrap=TRUE, sparse=TRUE)
-      final_fit <- construct.odpcs(final_fit, data=Z, fn_call=match.call())
-    } else {
-      final_fit <- crit.odpc(Z=Z, k_list=opt_comp[[1]]$k1, tol=tol, niter_max=niter_max, ncores=ncores)
+    response_train <- Z_train[(k_tot_max + 1):(nrow(Z_train)),]
+    response <- Z[(k_tot_max + 1):(nrow(Z)),]
+    num_comp <- 1
+    fit_res <- get_partial_comp(Z=Z, Z_train=Z_train, response=response, response_train=response_train, h=h, 
+                                  nlambda=nlambda, alpha_en=alpha_en, k1=k1, k2=k2, k_tot_max=k_tot_max, tol=tol,
+                                  eps=eps, niter_max=niter_max, ncores=ncores, cl=cl, 
+                                  window_size=window_size, odpc_fit=list(odpc_fit[[num_comp]]))
+    final_fit <- fit_res$final_fit
+    while(num_comp < num_comp_total){
+      num_comp <- num_comp + 1
+      k1 <- odpc_fit[[num_comp]]$k1
+      k2 <- odpc_fit[[num_comp]]$k2
+      k_tot_max <- max(k1 + k2, k_tot_max)
+      response_train <- fit_res$residuals_train
+      response <- Z[(k_tot_max + 1):(nrow(Z)),] - fitted(final_fit, num_comp=num_comp)
+      fit_res <- get_partial_comp(Z=Z, Z_train=Z_train, response=response, response_train=response_train, h=h, 
+                                  nlambda=nlambda, alpha_en=alpha_en, k1=k1, k2=k2, k_tot_max=k_tot_max, tol=tol,
+                                  eps=eps, niter_max=niter_max, ncores=ncores, cl=cl, 
+                                  window_size=window_size, odpc_fit=list(odpc_fit[[num_comp]]))
+      final_fit <- append(final_fit, fit_res$final_fit)
     }
-  } else {
-    odpc_fit <- odpc(Z=Z_train, ks=ks, tol=tol, niter_max=niter_max)
-    k1 <- odpc_fit[[1]]$k1
-    k2 <- odpc_fit[[1]]$k2
-    k_tot_max <- k1 + k2
-    response <- Z_train[(k_tot_max + 1):(nrow(Z_train)),]
     
-    sparse_path <- sparse_odpc_priv(Z=Z_train,
-                                    resp=response,
-                                    num_lambda_in=nlambda,
-                                    alpha_en=alpha_en,
-                                    a_ini=odpc_fit[[1]]$a,
-                                    D_ini=rbind(odpc_fit[[1]]$alpha, odpc_fit[[1]]$B),
-                                    k_tot_max=k1+k2,
-                                    k1=k1,
-                                    k2=k2,
-                                    tol=tol,
-                                    eps=eps,
-                                    niter_max=niter_max,
-                                    pass_grid=FALSE,
-                                    lambda_grid_in=c(0))
-    
-    sparse_path <- lapply(sparse_path, function(fit) {convert_rename_comp(fit, wrap=TRUE, sparse=TRUE)})
-    # append original fit to the beginning of the path
-    odpc_fit[[1]]$lambda <- 0
-    sparse_path <- append(sparse_path, list(odpc_fit), after=0)
-    sparse_path <- lapply(sparse_path, function(fit) {construct.odpcs(fit, Z, fn_call=match.call())})
-    
-    # TODO test is.odpc this
-    forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, Z=Z, window_size=window_size, h=h, cl=cl)
-    best_fit <- get_best_sparse_fit(forecasts=forecasts, sparse_path=sparse_path, Z=Z, h=h)
-    
-    opt_comp <- best_fit$opt_comp
-    new_best_mse <- best_fit$opt_mse
-    new_opt_lambda <- opt_comp[[1]]$lambda
-    
-    response_full <- Z[(k_tot_max + 1):(nrow(Z)),]
-    if(new_opt_lambda > 0){
-      final_fit <- sparse_odpc_priv(Z=Z,
-                                    resp=response_full,
-                                    num_lambda_in=0,
-                                    alpha_en=alpha_en,
-                                    a_ini=opt_comp[[1]]$a,
-                                    D_ini=rbind(opt_comp[[1]]$alpha, opt_comp[[1]]$B),
-                                    k_tot_max=k1+k2,
-                                    k1=k1,
-                                    k2=k2,
-                                    tol=tol,
-                                    eps=eps,
-                                    niter_max=niter_max,
-                                    pass_grid=TRUE,
-                                    lambda_grid_in=c(new_opt_lambda))
-      final_fit <- convert_rename_comp(final_fit[[1]], wrap=TRUE, sparse=TRUE)
-      final_fit <- construct.odpcs(final_fit, data=Z, fn_call=match.call())
-    } else {
-      final_fit <- odpc(Z=Z, ks=ks, tol=tol, niter_max=niter_max)
-    }
   }
   
   on.exit(stopCluster(cl))
   return(final_fit)
 }
 
-get_best_sparse_fit <- function(sparse_path, forecasts, Z, h){
-  mses <- get_ave_mse_sparse(forecasts=forecasts, Z=Z, h=h)
+get_best_sparse_fit <- function(sparse_path, forecasts, response, h){
+  mses <- get_ave_mse_sparse(forecasts=forecasts, response=response, h=h)
   opt_lambda_ind <- which.min(mses)
   opt_comp <- sparse_path[[opt_lambda_ind]]
   return(list(opt_comp=opt_comp, opt_mse=min(mses)))
 }
 
-get_ave_mse_sparse <- function(forecasts, Z, h){
-  centered_forecasts <- lapply(seq_along(forecasts), function(w) {scale(t(forecasts[[w]]), center=Z[nrow(Z) - w + 1,], scale=FALSE)})
+get_ave_mse_sparse <- function(forecasts, response, h){
+  centered_forecasts <- lapply(seq_along(forecasts), function(w) {scale(t(forecasts[[w]]), center=response[nrow(response) - w + 1,], scale=FALSE)})
   mses_per_window <- sapply(seq_along(centered_forecasts), function(w) { apply(centered_forecasts[[w]] , 1, function(row) mean(row**2))})
   mses <- apply(mses_per_window, 1, mean)
 }
@@ -239,8 +153,8 @@ forecast_sparse_odpc <- function(fit, rolled_data, h){
   # get components defined using a in fit but data in rolled_data
   new_comps <- sapply(fit, function(fit_component) {get_new_comp(a=fit_component$a, rolled_data=rolled_data, k_max=k_max)})
   fores_comps <- apply(new_comps, 2, function(x, h) { auto <- auto.arima(x, stationary=TRUE, seasonal=FALSE, approximation=TRUE)
-                                                      return(forecast(auto, h)$mean[h])
-                                                      }, h)
+  return(forecast(auto, h)$mean[h])
+  }, h)
   new_comps <- rbind(new_comps, fores_comps)
   for (i in 1:ncomp){
     matF <- getMatrixFore(f=new_comps[, i], k2=k_max, h=h)
@@ -256,4 +170,66 @@ get_new_comp <- function(a, rolled_data, k_max){
   new_comp[1:k_max] <- matF[1:k_max, k_max+2]
   new_comp[(k_max + 1):(nrow(rolled_data) - k_max)] <- matF[,2]
   return(new_comp)
+}
+
+get_partial_comp <- function(Z, Z_train, response, response_train, h, nlambda, alpha_en, k_tot_max,
+                             k1, k2, tol, eps, niter_max, ncores, cl, window_size, odpc_fit){
+  
+  sparse_path <- sparse_odpc_priv(Z=Z_train,
+                                  resp=response_train,
+                                  num_lambda_in=nlambda,
+                                  alpha_en=alpha_en,
+                                  a_ini=odpc_fit[[1]]$a,
+                                  D_ini=rbind(odpc_fit[[1]]$alpha, odpc_fit[[1]]$B),
+                                  k_tot_max=k_tot_max,
+                                  k1=k1,
+                                  k2=k2,
+                                  tol=tol,
+                                  eps=eps,
+                                  niter_max=niter_max,
+                                  pass_grid=FALSE,
+                                  lambda_grid_in=c(0))
+  
+  sparse_path <- lapply(sparse_path, function(fit) {convert_rename_comp(fit, wrap=TRUE, sparse=TRUE)})
+  # append original fit to the beginning of the path
+  odpc_fit[[1]]$lambda <- 0
+  sparse_path <- append(sparse_path, list(odpc_fit), after=0)
+  sparse_path <- lapply(sparse_path, function(fit) {construct.odpcs(fit, Z, fn_call=match.call())})
+  
+  # TODO test is.odpc this
+  forecasts <- forecast_sparse_rolled(sparse_path=sparse_path, Z=Z, window_size=window_size, h=h, cl=cl)
+  best_fit <- get_best_sparse_fit(forecasts=forecasts, sparse_path=sparse_path, response=response, h=h)
+  
+  opt_comp <- best_fit$opt_comp
+  new_best_mse <- best_fit$opt_mse
+  new_opt_lambda <- opt_comp[[1]]$lambda
+  
+  residuals_train <- response_train - fitted(opt_comp)
+  if(new_opt_lambda > 0){
+    final_fit <- sparse_odpc_priv(Z=Z,
+                                  resp=response,
+                                  num_lambda_in=0,
+                                  alpha_en=alpha_en,
+                                  a_ini=odpc_fit[[1]]$a,
+                                  D_ini=rbind(odpc_fit[[1]]$alpha, odpc_fit[[1]]$B),
+                                  k_tot_max=k_tot_max,
+                                  k1=k1,
+                                  k2=k2,
+                                  tol=tol,
+                                  eps=eps,
+                                  niter_max=niter_max,
+                                  pass_grid=TRUE,
+                                  lambda_grid_in=c(new_opt_lambda))
+    final_fit <- convert_rename_comp(final_fit[[1]], wrap=TRUE, sparse=TRUE)
+    final_fit <- construct.odpcs(final_fit, data=Z, fn_call=match.call())
+  } else {
+    final_fit<- convert_rename_comp(odpc_priv(Z = Z, resp=response, k_tot_max=k_tot_max,
+                                  k1 = k1, k2 = k2, num_comp=1, f_ini = 0,
+                                  passf_ini = FALSE, tol = tol, niter_max = niter_max, method = 3), wrap=TRUE, sparse=FALSE)
+    final_fit <- construct.odpcs(final_fit, data=Z, fn_call=match.call())
+    final_fit[[1]]$lambda <- 0
+    final_fit[[1]]$obj <- final_fit[[1]]$mse
+  }
+  
+  return(list(final_fit=final_fit, residuals_train=residuals_train))
 }

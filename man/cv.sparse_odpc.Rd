@@ -8,6 +8,7 @@ cv.sparse_odpc(
   Z,
   h,
   k_list = 1:3,
+  max_num_comp = 1,
   nlambda = 20,
   alpha_en = 1,
   window_size,
@@ -24,6 +25,8 @@ cv.sparse_odpc(
 \item{h}{Forecast horizon.}
 
 \item{k_list}{List of values of k to choose from.}
+
+\item{max_num_comp}{Maximum possible number of components to compute.}
 
 \item{nlambda}{Length of penalty sequence.}
 

@@ -103,7 +103,13 @@ void getVecAMatD_grad(const arma::mat & resp,
   out_WC = W * C;
   double L = vecresp.n_elem;
   arma::vec grad = (-2) * (1/L) * out_WC.t() *  (vecresp - out_WC * outa);
-  double step = (0.5 * L) * pow(norm(grad), 2)/pow(norm(out_WC * grad), 2);
+  double step = (0.5 * L) * pow(norm(grad), 2);
+  double denom = pow(norm(out_WC * grad), 2);
+  if (denom > arma::datum::eps){
+    step = step/denom;
+  } else {
+    step = 0;
+  }
   outa = outa - step * grad;
   if (lambda < 0){
     double norma = norm(outa);

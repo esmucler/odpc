@@ -50,15 +50,15 @@ for (t in 2:N){
   Z[t, ] <- b1 * (sum(a1 * Z[t - 1, ]) ) + u[t, ]
 }
 
-old_mse_sparse <- 0.8479749
-old_lambda_sparse <- 0.03631236
-sparse_fit <- cv.sparse_odpc(Z=Z, h=1, k_list=1, nlambda = 15, ncores=1, window_size = 5)
-
-test_that('Equality with stored mse for single component sparse odpc', {
-  expect_equal(sparse_fit[[1]]$mse, old_mse_sparse, tolerance=1e-2)
-})
-
-test_that('Equality with stored lambda for single component sparse odpc', {
-  expect_equal(sparse_fit[[1]]$lambda, old_lambda_sparse, tolerance=1e-4)
-})
+# old_mse_sparse <- 0.8479749
+# old_lambda_sparse <- 0.03631236
+# sparse_fit <- cv.sparse_odpc(Z=Z, h=1, k_list=1, nlambda = 15, ncores=1, window_size = 5)
+# 
+# test_that('Equality with stored mse for single component sparse odpc', {
+#   expect_equal(sparse_fit[[1]]$mse, old_mse_sparse, tolerance=1e-2)
+# })
+# 
+# test_that('Equality with stored lambda for single component sparse odpc', {
+#   expect_equal(sparse_fit[[1]]$lambda, old_lambda_sparse, tolerance=1e-4)
+# })
 

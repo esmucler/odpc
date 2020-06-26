@@ -180,6 +180,10 @@ cv.sparse_odpc <- function(Z, h, k_list = 1:3, max_num_comp=1, nlambda=20, alpha
 get_best_sparse_fit <- function(sparse_path, forecasts, response, h){
   mses <- get_ave_mse_sparse(forecasts=forecasts, response=response, h=h)
   opt_lambda_ind <- which.min(mses)
+  print('cv mses')
+  print(mses)
+  print('opt ind')
+  print(opt_lambda_ind)
   opt_comp <- sparse_path[[opt_lambda_ind]]
   return(list(opt_comp=opt_comp, opt_mse=min(mses)))
 }
@@ -260,6 +264,8 @@ get_partial_comp <- function(Z, Z_train, response, response_train, h, nlambda, a
   opt_comp <- best_fit$opt_comp
   new_best_mse <- best_fit$opt_mse
   new_opt_lambda <- opt_comp[[1]]$lambda
+  print('num non zero a')
+  print(sapply(sparse_path, function(obj) {sum(obj[[1]]$a !=0)} ))
   
   residuals_train <- response_train - fitted(opt_comp)
   if(new_opt_lambda > 0){
@@ -267,8 +273,8 @@ get_partial_comp <- function(Z, Z_train, response, response_train, h, nlambda, a
                                   resp=response,
                                   num_lambda_in=0,
                                   alpha_en=alpha_en,
-                                  a_ini=odpc_fit[[1]]$a,
-                                  D_ini=rbind(odpc_fit[[1]]$alpha, odpc_fit[[1]]$B),
+                                  a_ini=opt_comp[[1]]$a,
+                                  D_ini=rbind(opt_comp[[1]]$alpha, opt_comp[[1]]$B),
                                   k_tot_max=k_tot_max,
                                   k1=k1,
                                   k2=k2,

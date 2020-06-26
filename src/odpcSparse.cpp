@@ -187,7 +187,6 @@ arma::field<arma::field<arma::mat>> sparse_odpc_priv(const arma::mat & Z,
     double WC_norm =  pow(norm(WC), 2);
     lambda_max = max(abs(vecresp.t() * WC)) / WC_norm;
     arma::vec lambda_grid = exp(linspace(log(eps * lambda_max), log(lambda_max), num_lambda_in));
-    cout << '\n' << lambda_max;
     arma::field<arma::field<arma::mat>> ret(num_lambda_in);
     solve_sparse_odpc_grid(Z, resp, lambda_grid, alpha_en, k_tot_max, k1,
                            k2, ident, C, one, tol, niter_max,

@@ -179,6 +179,10 @@ cv.sparse_odpc <- function(Z, h, k_list = 1:3, max_num_comp=1, nlambda=20, alpha
 
 get_best_sparse_fit <- function(sparse_path, forecasts, response, h){
   mses <- get_ave_mse_sparse(forecasts=forecasts, response=response, h=h)
+  supps <- sapply(sparse_path, function(x) { sum(x[[1]]$a !=0) })
+  Tast <- nrow(response)
+  m <- ncol(response)
+  mses <- (Tast * m) * log(mses) + supps * log(Tast * m)
   opt_lambda_ind <- which.min(mses)
   print('cv mses')
   print(mses)

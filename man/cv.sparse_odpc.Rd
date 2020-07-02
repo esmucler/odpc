@@ -6,12 +6,10 @@
 \usage{
 cv.sparse_odpc(
   Z,
-  h,
   k_list = 1:3,
   max_num_comp = 1,
   nlambda = 20,
   alpha_en = 1,
-  window_size,
   ks,
   tol = 1e-04,
   niter_max = 500,
@@ -22,8 +20,6 @@ cv.sparse_odpc(
 \arguments{
 \item{Z}{Data matrix. Each column is a different time series.}
 
-\item{h}{Forecast horizon.}
-
 \item{k_list}{List of values of k to choose from.}
 
 \item{max_num_comp}{Maximum possible number of components to compute.}
@@ -31,8 +27,6 @@ cv.sparse_odpc(
 \item{nlambda}{Length of penalty sequence.}
 
 \item{alpha_en}{Between 0 and 1, elastic net}
-
-\item{window_size}{The size of the rolling window used to estimate the forecasting error.}
 
 \item{ks}{Optional, number of lags to use.}
 
@@ -42,7 +36,7 @@ cv.sparse_odpc(
 
 \item{eps}{Between 0 and 1, used to build penalty sequence}
 
-\item{ncores}{Number of cores to parallelise over.}
+\item{ncores}{Number of cores to use in parallel computations}
 }
 \value{
 An object of class odpcs, that is, a list of length equal to the number of computed components, each computed using the optimal value of k. 
@@ -79,7 +73,7 @@ for (i in 1:m) {
 # Choose parameters to perform a one step ahead forecast. Use 1 or 2 lags, only one component 
 # and a window size of 2 (artificially small to keep computation time low). Use two cores for the
 # loop over k, two cores for the loop over the window
-fit <- cv.sparse_odpc(x, h=1, k_list = 1, window_size = 2, ncores = 1)
+fit <- cv.sparse_odpc(x, k_list = 1, ncores = 1)
 }
 \references{
 Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Available at https://arxiv.org/abs/1708.04705.

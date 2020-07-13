@@ -59,7 +59,7 @@ that satisfy
 The second one-sided dynamic principal component is defined similarly, but now the
 residuals of the first one-sided dynamic principal component are to be reconstructed.
 
-If method = 'ALS', an Alternating Least Squares type algorithm is used to compute the solution. If 'mix' is chosen, in each iteration Least Squares is used to compute the matrix of loadings and intercepts, but one iteration of Coordinate Descent is performed to compute the vector a that defines the dynamic principal component. If method = 'gradient', in each iteration Least Squares is used to compute the matrix of loadings and intercepts, but one iteration of Gradient Descent is performed to compute the vector a that defines the dynamic principal component. By default, 'ALS' is used when the number of series is less than 40, else 'mix' is used.
+If method = 'ALS', an Alternating Least Squares type algorithm is used to compute the solution. If 'mix' is chosen, in each iteration Least Squares is used to compute the matrix of loadings and intercepts, but one iteration of Coordinate Descent is performed to compute the vector a that defines the dynamic principal component. If method = 'gradient', in each iteration Least Squares is used to compute the matrix of loadings and intercepts, but one iteration of Gradient Descent is performed to compute the vector a that defines the dynamic principal component. By default, 'ALS' is used when the number of series is less than 10, else 'gradient' is used.
 }
 
 \value{

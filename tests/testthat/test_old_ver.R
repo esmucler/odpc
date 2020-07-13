@@ -52,7 +52,7 @@ for (t in 2:N){
 
 old_mse_sparse_var <- 0.8271775
 old_lambda_sparse_var <- 0.2514091
-sparse_fit <- cv.sparse_odpc(Z=Z, k_list=1, ncores=1)
+sparse_fit <- crit.sparse_odpc(Z=Z, k_list=1, ncores=1)
  
 test_that('Equality with stored mse for VAR model for single component sparse odpc', {
   expect_equal(sparse_fit[[1]]$mse, old_mse_sparse_var, tolerance=1e-2)
@@ -65,7 +65,7 @@ test_that('Equality with stored lambda for VAR model for single component sparse
 
 old_mse_sparse_dfm <- 0.7941179
 old_lambda_sparse_dfm <- 1.375486
-sparse_fit <- cv.sparse_odpc(Z=x, k_list=1, ncores=1)
+sparse_fit <- crit.sparse_odpc(Z=x, k_list=1, ncores=1)
 
 test_that('Equality with stored mse for DFM model for single component sparse odpc', {
   expect_equal(sparse_fit[[1]]$mse, old_mse_sparse_dfm, tolerance=1e-2)

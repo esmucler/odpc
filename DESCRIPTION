@@ -1,8 +1,8 @@
 Package: odpc
 Type: Package
 Title: One-Sided Dynamic Principal Components
-Version: 2.0.3
-Date: 2020-06-30
+Version: 2.0.4
+Date: 2020-07-13
 Author: Daniel Peña <daniel.pena@uc3m.es>,
     Ezequiel Smucler <ezequiels.90@gmail.com>,
     Victor Yohai <vyohai@dm.uba.ar>

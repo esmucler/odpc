@@ -1,9 +1,8 @@
-#' @title Automatic Choice of Regularization Parameters for Sparse One-Sided Dynamic Principal Components via Cross-Validation
+#' @title Automatic Choice of Regularization Parameters for Sparse One-Sided Dynamic Principal Components using a BIC type criterion
 #' @param Z Data matrix. Each column is a different time series.
 #' @param k_list List of values of k to choose from.
 #' @param max_num_comp Maximum possible number of components to compute.
 #' @param nlambda Length of penalty sequence.
-#' @param ks Optional, number of lags to use.
 #' @param tol Relative precision. Default is 1e-4.
 #' @param niter_max Integer. Maximum number of iterations. Default is 500.
 #' @param eps Between 0 and 1, used to build penalty sequence
@@ -23,16 +22,22 @@
 #'\item{B}{Matrix of loadings corresponding to f. Row number \eqn{k} is the vector of \eqn{k-1} lag loadings.}
 #'\item{call}{The matched call.}
 #'\item{conv}{Logical. Did the iterations converge?}
-#'\item{lambda}{Regularization parameter used for this componen}
+#'\item{lambda}{Regularization parameter used for this component}
 #'\code{components}, \code{fitted}, \code{plot} and \code{print} methods are available for this class.
 #' 
 #' 
 #' @description
-#' Computes Sparse One-Sided Dynamic Principal Components, choosing the number of components and regularization parameters automatically, to minimize an estimate
-#' of the forecasting mean squared error.
+#' Computes Sparse One-Sided Dynamic Principal Components, choosing the number of components and regularization parameters automatically, using a BIC type criterion.
 #'
 #' @details 
-#' TBA
+#' First \code{\link{crit.odpc}} is called to choose the number of lags and of components to use. Each component is then computed using a regularized version of the
+#' odpc objective function (see \code{\link{odpc}}), where the L1 norm of the \eqn{\mathbf{a}} vector is penalized. The penalization parameter \eqn{\lambda} is chosen from a grid of candidates
+#' of size \code{nlambda}, seeking to minimize the following BIC type criterion
+#' \deqn{
+#' \log(MSE(\mathbf{a}_{\lambda},\mathbf{\alpha}_{\lambda}, \mathbf{B}_{\lambda} )) + \frac{\log(T^{\ast} m)}{T^{\ast}m} \Vert \mathbf{a}_{\lambda}\Vert_{0},
+#' }
+#' where \eqn{\mathbf{a}_{\lambda},\mathbf{B}_{\lambda} } are the estimates associated with a given \eqn{\lambda}, \eqn{m} is the number of series and
+#' \eqn{T^{\ast}} is the number of periods being reconstructed.
 #' 
 #' @references
 #' Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Available at https://arxiv.org/abs/1708.04705.
@@ -49,11 +54,8 @@
 #' for (i in 1:m) {
 #'   x[, i] <- 10 * sin(2 * pi * (i/m)) * f[1:T] + 10 * cos(2 * pi * (i/m)) * f[2:(T + 1)] + u[, i]
 #' }
-#' # Choose parameters to perform a one step ahead forecast. Use 1 or 2 lags, only one component 
-#' # and a window size of 2 (artificially small to keep computation time low). Use two cores for the
-#' # loop over k, two cores for the loop over the window
-#' fit <- cv.sparse_odpc(x, k_list = 1, ncores = 1)
-cv.sparse_odpc <- function(Z,  k_list = 1:3, max_num_comp=1, nlambda=20, ks, tol = 1e-04, niter_max = 500, eps=1e-3, ncores=1) {
+#' fit <- crit.sparse_odpc(x, k_list = 1, ncores = 1)
+crit.sparse_odpc <- function(Z,  k_list = 1:3, max_num_comp=1, nlambda=20, tol = 1e-04, niter_max = 500, eps=1e-3, ncores=1) {
   
   if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
           !inherits(Z, "xts"), !inherits(Z, "data.frame"),
@@ -75,33 +77,31 @@ cv.sparse_odpc <- function(Z,  k_list = 1:3, max_num_comp=1, nlambda=20, ks, tol
     stop("niter_max should be a positive integer")
   }
   
-  if (missing(ks)){
-    odpc_fit <- crit.odpc(Z=Z, max_num_comp=max_num_comp, k_list=k_list, tol=tol, niter_max=niter_max, ncores=ncores)
-    num_comp_total <- length(odpc_fit)
-    k1 <- odpc_fit[[1]]$k1
-    k2 <- odpc_fit[[1]]$k2
-    k_tot_max <- k1 + k2
-    response <- Z[(k_tot_max + 1):(nrow(Z)),]
-    num_comp <- 1
+  odpc_fit <- crit.odpc(Z=Z, max_num_comp=max_num_comp, k_list=k_list, tol=tol, niter_max=niter_max, ncores=ncores)
+  num_comp_total <- length(odpc_fit)
+  k1 <- odpc_fit[[1]]$k1
+  k2 <- odpc_fit[[1]]$k2
+  k_tot_max <- k1 + k2
+  response <- Z[(k_tot_max + 1):(nrow(Z)),]
+  num_comp <- 1
+  fit_res <- get_partial_comp(Z=Z, response=response, 
+                              nlambda=nlambda, k1=k1, k2=k2, k_tot_max=k_tot_max, tol=tol,
+                              eps=eps, niter_max=niter_max, 
+                              odpc_fit=list(odpc_fit[[num_comp]]))
+  final_fit <- fit_res$final_fit
+  while(num_comp < num_comp_total){
+    num_comp <- num_comp + 1
+    k1 <- odpc_fit[[num_comp]]$k1
+    k2 <- odpc_fit[[num_comp]]$k2
+    k_tot_max <- max(k1 + k2, k_tot_max)
+    response <- Z[(k_tot_max + 1):(nrow(Z)),] - fitted(final_fit, num_comp=num_comp)
     fit_res <- get_partial_comp(Z=Z, response=response, 
                                 nlambda=nlambda, k1=k1, k2=k2, k_tot_max=k_tot_max, tol=tol,
                                 eps=eps, niter_max=niter_max, 
                                 odpc_fit=list(odpc_fit[[num_comp]]))
-    final_fit <- fit_res$final_fit
-    while(num_comp < num_comp_total){
-      num_comp <- num_comp + 1
-      k1 <- odpc_fit[[num_comp]]$k1
-      k2 <- odpc_fit[[num_comp]]$k2
-      k_tot_max <- max(k1 + k2, k_tot_max)
-      response <- Z[(k_tot_max + 1):(nrow(Z)),] - fitted(final_fit, num_comp=num_comp)
-      fit_res <- get_partial_comp(Z=Z, response=response, 
-                                  nlambda=nlambda, k1=k1, k2=k2, k_tot_max=k_tot_max, tol=tol,
-                                  eps=eps, niter_max=niter_max, 
-                                  odpc_fit=list(odpc_fit[[num_comp]]))
-      final_fit <- append(final_fit, fit_res$final_fit)
-    }
+    final_fit <- append(final_fit, fit_res$final_fit)
+  }
     
-  } 
   return(final_fit)
 }
 

@@ -1,3 +1,9 @@
+odpc 2.0.4
+==============
+
+* Adds a function, crit.sparse_odpc, for computing a sparse version of odpc, where the L1 norm of the a vector is penalized.
+The number of lags, components and the penalty constant are chosen automatically.
+
 odpc 2.0.3
 ==============
 

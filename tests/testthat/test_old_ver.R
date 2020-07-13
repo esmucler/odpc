@@ -37,7 +37,7 @@ test_that('Equality with stored mse for method gradient', {
 })
 
 N <- 50
-m <- 10
+m <- 30
 set.seed(1234)
 Z <- matrix(0, N, m)
 u <- matrix(rnorm(N * m), N, m)
@@ -50,15 +50,28 @@ for (t in 2:N){
   Z[t, ] <- b1 * (sum(a1 * Z[t - 1, ]) ) + u[t, ]
 }
 
-# old_mse_sparse <- 0.8479749
-# old_lambda_sparse <- 0.03631236
-# sparse_fit <- cv.sparse_odpc(Z=Z, h=1, k_list=1, nlambda = 15, ncores=1, window_size = 5)
-# 
-# test_that('Equality with stored mse for single component sparse odpc', {
-#   expect_equal(sparse_fit[[1]]$mse, old_mse_sparse, tolerance=1e-2)
-# })
-# 
-# test_that('Equality with stored lambda for single component sparse odpc', {
-#   expect_equal(sparse_fit[[1]]$lambda, old_lambda_sparse, tolerance=1e-4)
-# })
+old_mse_sparse_var <- 0.8271775
+old_lambda_sparse_var <- 0.2514091
+sparse_fit <- cv.sparse_odpc(Z=Z, k_list=1, ncores=1)
+ 
+test_that('Equality with stored mse for VAR model for single component sparse odpc', {
+  expect_equal(sparse_fit[[1]]$mse, old_mse_sparse_var, tolerance=1e-2)
+})
+
+test_that('Equality with stored lambda for VAR model for single component sparse odpc', {
+  expect_equal(sparse_fit[[1]]$lambda, old_lambda_sparse_var, tolerance=1e-4)
+})
+
+
+old_mse_sparse_dfm <- 0.7941179
+old_lambda_sparse_dfm <- 1.375486
+sparse_fit <- cv.sparse_odpc(Z=x, k_list=1, ncores=1)
+
+test_that('Equality with stored mse for VAR model for single component sparse odpc', {
+  expect_equal(sparse_fit[[1]]$mse, old_mse_sparse_dfm, tolerance=1e-2)
+})
+
+test_that('Equality with stored lambda for VAR model for single component sparse odpc', {
+  expect_equal(sparse_fit[[1]]$lambda, old_lambda_sparse_dfm, tolerance=1e-4)
+})
 

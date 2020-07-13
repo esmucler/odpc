@@ -9,7 +9,6 @@ cv.sparse_odpc(
   k_list = 1:3,
   max_num_comp = 1,
   nlambda = 20,
-  alpha_en = 1,
   ks,
   tol = 1e-04,
   niter_max = 500,
@@ -25,8 +24,6 @@ cv.sparse_odpc(
 \item{max_num_comp}{Maximum possible number of components to compute.}
 
 \item{nlambda}{Length of penalty sequence.}
-
-\item{alpha_en}{Between 0 and 1, elastic net}
 
 \item{ks}{Optional, number of lags to use.}
 

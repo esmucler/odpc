@@ -3,7 +3,6 @@
 #' @param k_list List of values of k to choose from.
 #' @param max_num_comp Maximum possible number of components to compute.
 #' @param nlambda Length of penalty sequence.
-#' @param alpha_en Between 0 and 1, elastic net
 #' @param ks Optional, number of lags to use.
 #' @param tol Relative precision. Default is 1e-4.
 #' @param niter_max Integer. Maximum number of iterations. Default is 500.
@@ -54,7 +53,7 @@
 #' # and a window size of 2 (artificially small to keep computation time low). Use two cores for the
 #' # loop over k, two cores for the loop over the window
 #' fit <- cv.sparse_odpc(x, k_list = 1, ncores = 1)
-cv.sparse_odpc <- function(Z,  k_list = 1:3, max_num_comp=1, nlambda=20, alpha_en=1, ks, tol = 1e-04, niter_max = 500, eps=1e-3, ncores=1) {
+cv.sparse_odpc <- function(Z,  k_list = 1:3, max_num_comp=1, nlambda=20, ks, tol = 1e-04, niter_max = 500, eps=1e-3, ncores=1) {
   
   if (all(!inherits(Z, "matrix"), !inherits(Z, "mts"),
           !inherits(Z, "xts"), !inherits(Z, "data.frame"),
@@ -85,7 +84,7 @@ cv.sparse_odpc <- function(Z,  k_list = 1:3, max_num_comp=1, nlambda=20, alpha_e
     response <- Z[(k_tot_max + 1):(nrow(Z)),]
     num_comp <- 1
     fit_res <- get_partial_comp(Z=Z, response=response, 
-                                nlambda=nlambda, alpha_en=alpha_en, k1=k1, k2=k2, k_tot_max=k_tot_max, tol=tol,
+                                nlambda=nlambda, k1=k1, k2=k2, k_tot_max=k_tot_max, tol=tol,
                                 eps=eps, niter_max=niter_max, 
                                 odpc_fit=list(odpc_fit[[num_comp]]))
     final_fit <- fit_res$final_fit
@@ -96,7 +95,7 @@ cv.sparse_odpc <- function(Z,  k_list = 1:3, max_num_comp=1, nlambda=20, alpha_e
       k_tot_max <- max(k1 + k2, k_tot_max)
       response <- Z[(k_tot_max + 1):(nrow(Z)),] - fitted(final_fit, num_comp=num_comp)
       fit_res <- get_partial_comp(Z=Z, response=response, 
-                                  nlambda=nlambda, alpha_en=alpha_en, k1=k1, k2=k2, k_tot_max=k_tot_max, tol=tol,
+                                  nlambda=nlambda, k1=k1, k2=k2, k_tot_max=k_tot_max, tol=tol,
                                   eps=eps, niter_max=niter_max, 
                                   odpc_fit=list(odpc_fit[[num_comp]]))
       final_fit <- append(final_fit, fit_res$final_fit)
@@ -107,13 +106,12 @@ cv.sparse_odpc <- function(Z,  k_list = 1:3, max_num_comp=1, nlambda=20, alpha_e
 }
 
 
-get_partial_comp <- function(Z, response, nlambda, alpha_en, k_tot_max,
+get_partial_comp <- function(Z, response, nlambda, k_tot_max,
                              k1, k2, tol, eps, niter_max, odpc_fit){
   
   sparse_path <- sparse_odpc_priv(Z=Z,
                                   resp=response,
                                   num_lambda_in=nlambda,
-                                  alpha_en=alpha_en,
                                   a_ini=odpc_fit[[1]]$a,
                                   D_ini=rbind(odpc_fit[[1]]$alpha, odpc_fit[[1]]$B),
                                   k_tot_max=k_tot_max,
@@ -131,15 +129,11 @@ get_partial_comp <- function(Z, response, nlambda, alpha_en, k_tot_max,
   sparse_path <- append(sparse_path, list(odpc_fit), after=0)
   sparse_path <- lapply(sparse_path, function(fit) {construct.odpcs(fit, Z, fn_call=match.call())})
   
-  print('num non zero a')
-  print(sapply(sparse_path, function(obj) {sum(obj[[1]]$a !=0)} ))
-  
   mses <- sapply(sparse_path, function(x) x[[1]]$mse)
   numb_vars <- sapply(sparse_path, function(x) sum(x[[1]]$a != 0))
   Tast <- nrow(response)
   m <- ncol(response)
   bics <- log(mses) + log(Tast * m) / (Tast * m) * numb_vars
-  print(bics)
   
   opt_ind <- which.min(bics)
   opt_comp <- sparse_path[[opt_ind]]

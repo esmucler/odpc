@@ -7,6 +7,10 @@ odpc
 
 This package provides functions for computing One-Sided Dynamic Principal Components, a novel multivariate time series dimension reduction technique proposed in [Peña, Smucler and Yohai (2019)](https://doi.org/10.1080/01621459.2018.1520117).
 
+Version 2.0.4 includes a new feature, not discussed in the original paper, that of fitting sparse one-sided dynamic principal components.
+These are constructed by penalizing the L1 norm of the vector of coefficients that defines the one-sided dynamic principal components. 
+This new loss function is minimized using a new algorithm based on alternating proximal gradient descent. The penalty parameters are chosen automatically by minimizing a BIC type criterion. See the crit.sparse_odpc function. The original one-sided dynamic principal components (i.e., the non-sparse ones) are now also optimized using alternating gradient descent by default. Earlier algorithms based on alternating least squares and coordinate descent optimization are still available as possible options for the method argument. 
+
 ------------------------------------------------------------------------
 
 ### Installation
@@ -52,6 +56,9 @@ fit <- odpc(x[1:(T - 1), ], ks = c(1))
 forecasts <- forecast.odpcs(fit, h = 1)
 mse <- mean((x[T, ] - forecasts)**2)
 mse
+# Compute one sparse odpc with one lag
+sparse_fit <- crit.sparse_odpc(x[1:(T - 1), ], k_list = c(1))
+sparse_fit[[1]]$a
 ```
 
 ### License

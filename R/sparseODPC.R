@@ -22,7 +22,7 @@
 #'\item{B}{Matrix of loadings corresponding to f. Row number \eqn{k} is the vector of \eqn{k-1} lag loadings.}
 #'\item{call}{The matched call.}
 #'\item{conv}{Logical. Did the iterations converge?}
-#'\item{lambda}{Regularization parameter used for this component}
+#'\item{lambda}{Regularization parameter used for this component.}
 #'\code{components}, \code{fitted}, \code{plot} and \code{print} methods are available for this class.
 #' 
 #' 
@@ -30,7 +30,7 @@
 #' Computes Sparse One-Sided Dynamic Principal Components, choosing the number of components and regularization parameters automatically, using a BIC type criterion.
 #'
 #' @details 
-#' First \code{\link{crit.odpc}} is called to choose the number of lags and of components to use. Each component is then computed using a regularized version of the
+#' First \code{\link{crit.odpc}} is called to choose the number of lags and of components to use. Each sparse component is then computed using a regularized version of the
 #' odpc objective function (see \code{\link{odpc}}), where the L1 norm of the \eqn{\mathbf{a}} vector is penalized. The penalization parameter \eqn{\lambda} is chosen from a grid of candidates
 #' of size \code{nlambda}, seeking to minimize the following BIC type criterion
 #' \deqn{
@@ -40,7 +40,7 @@
 #' \eqn{T^{\ast}} is the number of periods being reconstructed.
 #' 
 #' @references
-#' Peña D., Smucler E. and Yohai V.J. (2017). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Available at https://arxiv.org/abs/1708.04705.
+#' Peña D., Smucler E. and Yohai V.J. (2019). “Forecasting Multiple Time Series with One-Sided Dynamic Principal Components.” Journal of the American Statistical Association.
 #'
 #' @seealso \code{\link{odpc}}, \code{\link{crit.odpc}}, \code{\link{forecast.odpcs}}
 #' 

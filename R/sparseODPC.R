@@ -94,14 +94,18 @@ crit.sparse_odpc <- function(Z,  k_list = 1:3, max_num_comp=1, nlambda=20, tol =
     k1 <- odpc_fit[[num_comp]]$k1
     k2 <- odpc_fit[[num_comp]]$k2
     k_tot_max <- max(k1 + k2, k_tot_max)
-    response <- Z[(k_tot_max + 1):(nrow(Z)),] - fitted(final_fit, num_comp=num_comp)
+    response <- Z[(k_tot_max + 1):(nrow(Z)),] - fitted(final_fit, num_comp=(num_comp - 1))
     fit_res <- get_partial_comp(Z=Z, response=response, 
                                 nlambda=nlambda, k1=k1, k2=k2, k_tot_max=k_tot_max, tol=tol,
                                 eps=eps, niter_max=niter_max, 
                                 odpc_fit=list(odpc_fit[[num_comp]]))
     final_fit <- append(final_fit, fit_res$final_fit)
   }
-    
+  
+  if (num_comp_total > 1){
+    fn_call <- match.call()
+    final_fit <- construct.odpcs(final_fit, data=Z, fn_call=fn_call)
+  }
   return(final_fit)
 }
 

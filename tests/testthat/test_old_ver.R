@@ -75,3 +75,36 @@ test_that('Equality with stored lambda for DFM model for single component sparse
   expect_equal(sparse_fit[[1]]$lambda, old_lambda_sparse_dfm, tolerance=1e-4)
 })
 
+T <- 30 #length of series
+m <- 10 #number of series
+set.seed(1234)
+f <- rnorm(T + 1)
+f2 <- rnorm(T + 1)
+x <- matrix(0, T, m)
+u <- matrix(rnorm(T * m), T, m)
+for (i in 1:m) {
+  x[, i] <- 10 * sin(2 * pi * (i/m)) * f[1:T] + 10 * cos(2 * pi * (i/m)) * f[2:(T + 1)] + 
+    (i/m) * f2[1:T] + f2[2:(T + 1)]+ u[, i]
+}
+
+old_mse_1_sparse_dfm_two_fact <- 2.67426
+old_lambda_1_sparse_dfm_two_fact <- 0.1478385
+old_mse_2_sparse_dfm_two_fact <-0.6866781
+old_lambda_2_sparse_dfm_two_fact <- 0.08996326
+sparse_fit <- crit.sparse_odpc(Z=x, k_list=1, ncores=1, max_num_comp=2)
+
+test_that('Equality with stored mse for two factor DFM model for first component sparse odpc', {
+  expect_equal(sparse_fit[[1]]$mse, old_mse_1_sparse_dfm_two_fact, tolerance=1e-2)
+})
+
+test_that('Equality with stored lambda for two factor DFM model for first component sparse odpc', {
+  expect_equal(sparse_fit[[1]]$lambda, old_lambda_1_sparse_dfm_two_fact, tolerance=1e-2)
+})
+
+test_that('Equality with stored mse for two factor DFM model for second component sparse odpc', {
+  expect_equal(sparse_fit[[2]]$mse, old_mse_2_sparse_dfm_two_fact, tolerance=1e-2)
+})
+
+test_that('Equality with stored lambda for two factor DFM model for second component sparse odpc', {
+  expect_equal(sparse_fit[[2]]$lambda, old_lambda_2_sparse_dfm_two_fact, tolerance=1e-3)
+})

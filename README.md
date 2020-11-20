@@ -1,6 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-[![Build Status](https://travis-ci.org/esmucler/odpc.svg?branch=master)](https://travis-ci.org/esmucler/odpc) [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/odpc)](https://cran.r-project.org/package=odpc) [![Downloads](http://cranlogs.r-pkg.org/badges/odpc)](https://cran.r-project.org/package=odpc)
+[![R build status](https://github.com/esmucler/odpc/workflows/R-CMD-check/badge.svg)](https://github.com/esmucler/odpc/action)
+[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/odpc)](https://cran.r-project.org/package=odpc) [![Downloads](http://cranlogs.r-pkg.org/badges/odpc)](https://cran.r-project.org/package=odpc)
 
 odpc
 ====

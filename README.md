@@ -2,6 +2,7 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 [![R build status](https://github.com/esmucler/odpc/workflows/R-CMD-check/badge.svg)](https://github.com/esmucler/odpc/action)
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/odpc)](https://cran.r-project.org/package=odpc) [![Downloads](http://cranlogs.r-pkg.org/badges/odpc)](https://cran.r-project.org/package=odpc)
+![Total downloads](https://cranlogs.r-pkg.org/badges/grand-total/odpc)
 
 odpc
 ====

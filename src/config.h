@@ -22,5 +22,3 @@
 #ifndef HAVE_OPENMP_CXX
 #   define ARMA_DONT_USE_OPENMP
 #endif
-
-#define RCPP_ARMADILLO_FIX_Field 1
